@@ -11,10 +11,11 @@ interface Particle {
 
 const NEON_COLOR = '#39FF14';
 
-export default function AuthorizationForm() {
+export default function RegistrationForm() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [success, setSuccess] = useState(false);
     const router = useRouter();
 
     // ... (весь useEffect с анимацией частиц остаётся БЕЗ изменений) ...
@@ -103,36 +104,41 @@ export default function AuthorizationForm() {
         const formData = new FormData(e.currentTarget);
         
         try {
-            // 🔥 Отправка на API логина
-            const response = await fetch('/api/auth/login', {
+            const response = await fetch('/api/auth/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    email: formData.get('email'),  // ← имя поля должно быть "email"
+                    email: formData.get('email'),
                     password: formData.get('password'),
+                    name: formData.get('username'), // username → name в БД
+                    phone: formData.get('phone'),
                 }),
             });
 
             const data = await response.json();
 
             if (!response.ok) {
-                throw new Error(data.error || 'Authorization failed');
+                throw new Error(data.error || 'Registration failed');
             }
 
-            // ✅ Cookie с токеном установится автоматически (http-only)
-            // 🔥 Редирект на главную
-            router.push('/');
-            router.refresh(); // Обновляем серверные компоненты
+            setSuccess(true);
+            
+            // Редирект через 1.5 сек для показа успеха
+            setTimeout(() => {
+                router.push('/login');
+                router.refresh();
+            }, 1500);
 
         } catch (err: any) {
             setError(err.message || 'Connection error. Check your network.');
+        } finally {
             setIsLoading(false);
         }
     };
 
     return (
         <section className="min-h-screen flex items-center justify-center p-4 bg-mesh-dark relative overflow-hidden">
-            {/* Canvas фон — без изменений */}
+            {/* Canvas фон - без изменений */}
             <canvas
                 ref={canvasRef}
                 id="mesh-bg"
@@ -147,8 +153,8 @@ export default function AuthorizationForm() {
                 }}
             />
 
-            {/* Карточка авторизации */}
-            <main className="w-full max-w-md bg-mesh-card border border-zinc-800 rounded-2xl p-8 shadow-2xl relative overflow-hidden" data-purpose="login-card">
+            {/* Карточка регистрации */}
+            <main className="w-full max-w-md bg-mesh-card border border-zinc-800 rounded-2xl p-8 shadow-2xl relative overflow-hidden" data-purpose="registration-card">
                 {/* Декоративные элементы */}
                 <div className="absolute -top-24 -right-24 w-48 h-48 bg-mesh-neon/10 rounded-full blur-3xl"></div>
                 <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-mesh-neon/5 rounded-full blur-3xl"></div>
@@ -177,8 +183,32 @@ export default function AuthorizationForm() {
                                 ⚠ {error}
                             </div>
                         )}
+                        
+                        {/* Сообщение об успехе */}
+                        {success && (
+                            <div className="p-3 bg-green-500/10 border border-green-500/50 rounded-lg text-green-400 text-xs font-mono">
+                                ✓ Account initialized. Redirecting...
+                            </div>
+                        )}
 
-                        {/* Email (было Username) */}
+                        {/* Username */}
+                        <div data-purpose="input-group">
+                            <label className="block text-xs font-bold text-mesh-neon uppercase mb-2 tracking-widest" htmlFor="username">
+                                Username
+                            </label>
+                            <input
+                                className="w-full bg-zinc-900 border border-zinc-700 text-white rounded-lg px-4 py-3 focus:ring-1 focus:ring-mesh-neon focus:border-mesh-neon transition-all placeholder:text-zinc-600 disabled:opacity-50"
+                                id="username"
+                                name="username"
+                                placeholder="username"
+                                required
+                                type="text"
+                                minLength={3}
+                                disabled={isLoading || success}
+                            />
+                        </div>
+
+                        {/* Email */}
                         <div data-purpose="input-group">
                             <label className="block text-xs font-bold text-mesh-neon uppercase mb-2 tracking-widest" htmlFor="email">
                                 Email Address
@@ -186,11 +216,28 @@ export default function AuthorizationForm() {
                             <input
                                 className="w-full bg-zinc-900 border border-zinc-700 text-white rounded-lg px-4 py-3 focus:ring-1 focus:ring-mesh-neon focus:border-mesh-neon transition-all placeholder:text-zinc-600 disabled:opacity-50"
                                 id="email"
-                                name="email"  // ← важно: name="email" для API
+                                name="email"
                                 placeholder="user@mesh.network"
                                 required
                                 type="email"
-                                disabled={isLoading}
+                                disabled={isLoading || success}
+                            />
+                        </div>
+
+                        {/* Phone number */}
+                        <div data-purpose="input-group">
+                            <label className="block text-xs font-bold text-mesh-neon uppercase mb-2 tracking-widest" htmlFor="number">
+                                Phone Number
+                            </label>
+                            <input
+                                className="w-full bg-zinc-900 border border-zinc-700 text-white rounded-lg px-4 py-3 focus:ring-1 focus:ring-mesh-neon focus:border-mesh-neon transition-all placeholder:text-zinc-600 disabled:opacity-50"
+                                id="phone"
+                                name="phone"
+                                placeholder="+7"
+                                required
+                                type="tel"
+                                minLength={10}
+                                disabled={isLoading || success}
                             />
                         </div>
 
@@ -207,22 +254,52 @@ export default function AuthorizationForm() {
                                 required
                                 type="password"
                                 minLength={8}
-                                disabled={isLoading}
+                                disabled={isLoading || success}
                             />
+                            <p className="mt-2 text-[10px] text-zinc-500 italic">
+                                Minimum 8 alphanumeric characters recommended.
+                            </p>
                         </div>
 
-                        {/* Кнопка — с состоянием загрузки */}
+                        {/* Terms 
+                        <div className="flex items-start">
+                            <div className="flex items-center h-5">
+                                <input
+                                    className="h-4 w-4 rounded border-zinc-700 bg-zinc-900 text-mesh-neon focus:ring-mesh-neon focus:ring-offset-mesh-dark cursor-pointer disabled:opacity-50"
+                                    id="terms"
+                                    name="terms"
+                                    required
+                                    type="checkbox"
+                                    disabled={isLoading || success}
+                                />
+                            </div>
+                            <div className="ml-3 text-xs">
+                                <label className="text-zinc-400 leading-normal cursor-pointer" htmlFor="terms">
+                                    I agree to the{' '}
+                                    <a className="text-mesh-neon hover:underline" href="/terms">
+                                        Protocol Terms
+                                    </a>{' '}
+                                    and{' '}
+                                    <a className="text-mesh-neon hover:underline" href="/privacy">
+                                        Data Encryption Policy
+                                    </a>
+                                    .
+                                </label>
+                            </div>
+                        </div>*/}
+
+                        {/* Кнопка */}
                         <button
                             className="w-full bg-mesh-neon text-mesh-dark font-bold py-4 rounded-lg shadow-neon-button hover:bg-white transition-all duration-300 transform active:scale-[0.98] uppercase tracking-widest text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                             type="submit"
-                            disabled={isLoading}
+                            disabled={isLoading || success}
                         >
                             {isLoading ? (
                                 <span className="flex items-center justify-center gap-2">
                                     <span className="w-4 h-4 border-2 border-mesh-dark border-t-transparent rounded-full animate-spin"></span>
-                                    Connecting...
+                                    Initializing...
                                 </span>
-                            ) : 'Entry'}
+                            ) : success ? 'Success!' : 'Initialize Account'}
                         </button>
                     </form>
                 </section>
@@ -230,9 +307,9 @@ export default function AuthorizationForm() {
                 {/* Футер */}
                 <footer className="mt-10 pt-6 border-t border-zinc-800 text-center relative z-10">
                     <p className="text-zinc-400 text-sm">
-                        Don't have account?{' '}
-                        <a className="text-mesh-neon font-semibold hover:underline decoration-2 underline-offset-4 ml-1" href="/signup">
-                            Registration
+                        Already part of the network?{' '}
+                        <a className="text-mesh-neon font-semibold hover:underline decoration-2 underline-offset-4 ml-1" href="/login">
+                            Log In
                         </a>
                     </p>
                 </footer>

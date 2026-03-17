@@ -1,6 +1,6 @@
 // app/messenger/page.tsx
 import { Metadata } from 'next';
-import MessengerPage from './MessengerPage';
+import MessengerPage from '@/components/messenger/MessengerPage';
 
 export const metadata: Metadata = {
   title: 'Messenger | MESH',

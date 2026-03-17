@@ -4,10 +4,10 @@ import { verify } from 'jsonwebtoken';
 export function middleware(request: NextRequest) {
     const token = request.cookies.get('token')?.value;
 
-    const publicPaths = ['/signin', '/signup'];
+    const publicPaths = ['/login', '/register'];
 
     if(!token && !publicPaths.some(path => request.nextUrl.pathname.startsWith(path))) {
-        return NextResponse.redirect(new URL('/signin', request.url));
+        return NextResponse.redirect(new URL('/login', request.url));
     }
 
     return NextResponse.next();
