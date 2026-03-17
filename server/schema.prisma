@@ -1,0 +1,89 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+  // output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// === Перечисления (Enums) ===
+enum ConversationType {
+  PRIVATE
+  GROUP
+}
+
+enum ParticipantRole {
+  ADMIN
+  MEMBER
+}
+
+enum MessageStatus {
+  SENT
+  DELIVERED
+  READ
+}
+
+// === Пользователь ===
+model User {
+  id        String    @id @default(cuid())
+  email     String    @unique
+  password  String
+  name      String?
+  phone     String?
+  avatar    String?
+  status    String    @default("offline") 
+  lastSeen  DateTime?
+  createdAt DateTime  @default(now())
+
+  // Связи
+  participations Participant[] // В каких чатах состоит
+  messages       Message[]     // Отправленные сообщения
+}
+
+// === Чат (Комната) ===
+model Conversation {
+  id        String           @id @default(cuid())
+  type      ConversationType @default(PRIVATE)
+  name      String?          // Название (только для групп)
+  avatar    String?          // Аватар группы
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  // Связи
+  participants Participant[]
+  messages     Message[]
+}
+
+// === Участник чата ===
+// (Связующая таблица между User и Conversation)
+model Participant {
+  id             String          @id @default(cuid())
+  userId         String
+  conversationId String
+  role           ParticipantRole @default(MEMBER)
+  joinedAt       DateTime        @default(now())
+
+  user         User         @relation(fields: [userId], references: [id])
+  conversation Conversation @relation(fields: [conversationId], references: [id])
+
+  @@unique([userId, conversationId]) // Один пользователь не может быть в одном чате дважды
+}
+
+// === Сообщение ===
+model Message {
+  id             String        @id @default(cuid())
+  conversationId String
+  senderId       String
+  content        String        @db.Text
+  status         MessageStatus @default(SENT)
+  createdAt      DateTime      @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id])
+  sender       User         @relation(fields: [senderId], references: [id])
+}
