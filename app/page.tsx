@@ -1,6 +1,6 @@
 // app/page.tsx
 import { Metadata } from 'next';
-import FeedPage from './feed/FeedPage';
+import FeedPage from '@/components/feed/FeedPage';
 
 export const metadata: Metadata = {
   title: 'Mesh | Feed',

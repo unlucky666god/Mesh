@@ -2,7 +2,8 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChatItem } from './ChatItem';
+import { ChatItem } from '@/components/messenger/ChatItem';
+import { useSocket } from '@/context/socketContext';
 
 // === Типы ===
 interface Chat {

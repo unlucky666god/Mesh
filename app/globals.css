@@ -81,7 +81,7 @@ body {
 
 @layer base {
   body {
-    @apply font-display;
+    @apply font-sans;
   }
   
   .chat-scroll::-webkit-scrollbar {
