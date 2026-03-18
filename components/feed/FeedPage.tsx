@@ -1,7 +1,7 @@
 // app/feed/FeedPage.tsx
 'use client';
 import { useState, useEffect } from 'react';
-import { useSocket } from "../../context/socketContext";
+import { useSocket } from "@/context/socketContext";
 
 // Типы для постов и сторис
 interface Story {
@@ -67,21 +67,20 @@ const POSTS: Post[] = [
   },
 ];
 
-const { socket, connected } = useSocket();
-
-useEffect(() => {
-  if (!socket) return;
-
-  // Слушаем новые сообщения прямо здесь, в ленте!
-  socket.on("message:new", (data) => {
-    console.log("Новое сообщение пришло, пока ты листал ленту:", data);
-    // Тут можно обновить стейт уведомлений
-  });
-
-  return () => { socket.off("message:new"); };
-}, [socket]);
-
 export default function FeedPage() {
+  const { socket, connected } = useSocket();
+
+  useEffect(() => {
+    if (!socket) return;
+
+    // Слушаем новые сообщения прямо здесь, в ленте!
+    socket.on("message:new", (data) => {
+      console.log("Новое сообщение пришло, пока ты листал ленту:", data);
+      // Тут можно обновить стейт уведомлений
+    });
+
+    return () => { socket.off("message:new"); };
+  }, [socket]);
   const [postText, setPostText] = useState('');
   const [posts, setPosts] = useState<Post[]>(POSTS);
   const [stories] = useState<Story[]>(STORIES);
