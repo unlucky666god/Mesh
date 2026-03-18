@@ -1,0 +1,5 @@
+
+> mesh@0.1.0 server
+> tsx server/index.js
+
+sh: 1: tsx: not found
