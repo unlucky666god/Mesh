@@ -78,8 +78,8 @@ export default function ProfilePage() {
     // Implement like logic
   };
 
-  if (loading) return <div className="min-h-screen bg-background-dark flex items-center justify-center text-accent-neon font-mono animate-pulse">Accessing node ${username}...</div>;
-  if (!user) return <div className="min-h-screen bg-background-dark flex items-center justify-center text-red-500 font-mono">Node ${username} not found.</div>;
+  if (loading) return <div className="min-h-screen bg-background-dark flex items-center justify-center text-accent-neon font-mono animate-pulse">Accessing node {username}...</div>;
+  if (!user) return <div className="min-h-screen bg-background-dark flex items-center justify-center text-red-500 font-mono">Node {username} not found.</div>;
 
   return (
     <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-sans">

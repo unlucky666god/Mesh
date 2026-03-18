@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "../../../lib/prisma";
+import { verify } from "jsonwebtoken";
 
 export async function GET(
     req: NextRequest,
@@ -35,7 +36,29 @@ export async function GET(
             return NextResponse.json({ error: "User not found" }, { status: 404 });
         }
 
-        return NextResponse.json({ user });
+        const token = req.cookies.get("token")?.value;
+        let isFollowing = false;
+        if (token) {
+            try {
+                const decoded = verify(token, process.env.JWT_SECRET!) as { id: string };
+                const follow = await prisma.follow.findUnique({
+                    where: {
+                        followerId_followingId: {
+                            followerId: decoded.id,
+                            followingId: user.id
+                        }
+                    }
+                });
+                isFollowing = !!follow;
+            } catch (e) {}
+        }
+
+        return NextResponse.json({ 
+            user: {
+                ...user,
+                isFollowing
+            } 
+        });
     } catch (error) {
         console.error("Fetch user error:", error);
         return NextResponse.json({ error: "Server error" }, { status: 500 });
