@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSocket } from "@/context/socketContext";
 import Link from 'next/link';
+import UserSearch from '@/components/shared/UserSearch';
 
 // Типы для постов и сторис
 interface Story {
@@ -126,14 +127,11 @@ export default function FeedPage() {
           <div className="flex items-center gap-6">
 
             {/* Поиск */}
-            <div className="hidden sm:flex bg-white/5 border border-white/10 rounded-full px-4 py-1.5 items-center gap-2 focus-within:border-accent-neon transition-all">
-              <span className="material-symbols-outlined text-slate-400 text-sm">search</span>
-              <input
-                className="bg-transparent border-none focus:ring-0 text-sm w-40 lg:w-64 text-white placeholder:text-slate-500 outline-none"
-                placeholder="Explore Mesh..."
-                type="text"
-              />
-            </div>
+            <UserSearch
+              placeholder="Explore Mesh..."
+              className="hidden sm:block"
+              inputClassName="w-40 lg:w-64 rounded-full py-1.5"
+            />
 
             {/* Уведомления */}
             <button className="relative p-2 text-slate-400 hover:text-accent-neon transition-colors">

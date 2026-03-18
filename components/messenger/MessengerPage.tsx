@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { ChatItem } from '@/components/messenger/ChatItem';
 import { useSocket } from '@/context/socketContext';
+import UserSearch from '@/components/shared/UserSearch';
 
 // === Типы ===
 interface Chat {
@@ -215,14 +216,11 @@ export default function MessengerPage() {
         </div>
 
         {/* Поиск */}
-        <div className="relative hidden md:block">
-          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</span>
-          <input
-            className="w-64 bg-slate-100 dark:bg-surface-dark border-none rounded-lg pl-10 pr-4 py-2 text-sm focus:ring-1 focus:ring-accent-neon placeholder:text-slate-500 outline-none"
-            placeholder="Search network..."
-            type="text"
-          />
-        </div>
+        <UserSearch
+          placeholder="Search network..."
+          className="hidden md:block w-64"
+          inputClassName="rounded-lg py-2"
+        />
 
         {/* Правая часть + индикатор подключения */}
         <div className="flex items-center gap-4">
