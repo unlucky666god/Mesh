@@ -1,7 +1,7 @@
 // components/messenger/MessengerPage.tsx
 'use client';
-import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useRef, use } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { ChatItem } from '@/components/messenger/ChatItem';
 import { useSocket } from '@/context/socketContext';
 import UserSearch from '@/components/shared/UserSearch';
@@ -28,6 +28,8 @@ interface Message {
 
 export default function MessengerPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const chatIdParam = searchParams.get('chatId');
   
   const [chats, setChats] = useState<Chat[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -68,7 +70,11 @@ export default function MessengerPage() {
         if (res.ok) {
           const data = await res.json();
           setChats(data.chats);
-          if (data.chats.length > 0 && !activeChat) {
+
+          if (chatIdParam) {
+            const targeted = data.chats.find((c: Chat) => c.id === chatIdParam);
+            if (targeted) setActiveChat(targeted);
+          } else if (data.chats.length > 0 && !activeChat) {
             setActiveChat(data.chats[0]);
           }
         }
@@ -79,7 +85,7 @@ export default function MessengerPage() {
       }
     };
     loadChats();
-  }, [authChecked]);
+  }, [authChecked, chatIdParam]);
 
   // === Загрузка истории сообщений ===
   useEffect(() => {

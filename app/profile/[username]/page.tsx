@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import TopNav from '@/components/layout/TopNav';
 import MobileNav from '@/components/layout/MobileNav';
 import ProfileHeader from '@/components/profile/ProfileHeader';
@@ -12,6 +12,7 @@ import SidebarNav from '@/components/profile/SidebarNav';
 
 export default function ProfilePage() {
   const params = useParams();
+  const router = useRouter();
   const username = params.username as string;
   
   const [user, setUser] = useState<any>(null);
@@ -56,6 +57,23 @@ export default function ProfilePage() {
     }
   };
 
+  const handleSendMessage = async () => {
+    if (!user) return;
+    try {
+      const res = await fetch('/api/conversations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ recipientId: user.id }),
+      });
+      if (res.ok) {
+        const { conversation } = await res.json();
+        router.push(`/messenger?chatId=${conversation.id}`);
+      }
+    } catch (err) {
+      console.error('Failed to start conversation:', err);
+    }
+  };
+
   const handleLike = (postId: string) => {
     // Implement like logic
   };
@@ -81,6 +99,7 @@ export default function ProfilePage() {
               isFollowing: user.isFollowing // Assume API returns this
             }}
             onFollow={handleFollow}
+            onMessage={handleSendMessage}
           />
 
           {/* Статистика */}

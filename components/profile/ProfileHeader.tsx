@@ -10,9 +10,10 @@ interface ProfileHeaderProps {
     isFollowing: boolean;
   };
   onFollow: () => void;
+  onMessage: () => void;
 }
 
-export default function ProfileHeader({ profile, onFollow }: ProfileHeaderProps) {
+export default function ProfileHeader({ profile, onFollow, onMessage }: ProfileHeaderProps) {
   return (
     <>
       {/* Cover Photo */}
@@ -53,7 +54,10 @@ export default function ProfileHeader({ profile, onFollow }: ProfileHeaderProps)
           >
             {profile.isFollowing ? 'Following' : 'Follow'}
           </button>
-          <button className="flex items-center justify-center rounded-xl bg-surface-dark border border-white/10 px-4 py-2.5 text-slate-100 hover:bg-white/5 transition-all">
+          <button
+            className="flex items-center justify-center rounded-xl bg-surface-dark border border-white/10 px-4 py-2.5 text-slate-100 hover:bg-white/5 transition-all"
+            onClick={onMessage}
+          >
             <span className="material-symbols-outlined">mail</span>
           </button>
         </div>
