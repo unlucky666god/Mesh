@@ -4,14 +4,14 @@ import { prisma } from "../../../../lib/prisma";
 
 export async function POST(
     req: NextRequest,
-    { params }: { params: { username: string } }
+    { params }: { params: Promise<{ username: string }> }
 ) {
     try {
         const token = req.cookies.get("token")?.value;
         if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
         const decoded = verify(token, process.env.JWT_SECRET!) as { id: string };
-        const { username } = params;
+        const { username } = await params;
 
         const targetUser = await prisma.user.findUnique({ where: { name: username } });
         if (!targetUser) return NextResponse.json({ error: "Target user not found" }, { status: 404 });
