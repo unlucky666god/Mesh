@@ -1,6 +1,7 @@
 // app/messenger/page.tsx
 import { Metadata } from 'next';
 import MessengerPage from '@/components/messenger/MessengerPage';
+import { Suspense } from 'react';
 
 export const metadata: Metadata = {
   title: 'Messenger | MESH',
@@ -8,5 +9,9 @@ export const metadata: Metadata = {
 };
 
 export default function Messenger() {
-  return <MessengerPage />;
+  return (
+    <Suspense fallback={<div>Loading Messenger...</div>}>
+      <MessengerPage />
+    </Suspense>
+  );
 }

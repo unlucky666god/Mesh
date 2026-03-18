@@ -33,6 +33,7 @@ export const SocketProvider = ({ children, token }: { children: React.ReactNode,
     
     const s = io('http://localhost:4000', { 
       auth: { token },
+      transports: ['websocket', 'polling'],
       reconnectionAttempts: 5,
     });
 
