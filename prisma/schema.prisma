@@ -1,15 +1,13 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client-js"
-  // output   = "../generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 // === Перечисления (Enums) ===
@@ -34,34 +32,91 @@ model User {
   id        String    @id @default(cuid())
   email     String    @unique
   password  String
-  name      String?
+  name      String?   @unique
   phone     String?
   avatar    String?
+  bio       String?
+  cover     String?
   status    String    @default("offline") 
   lastSeen  DateTime?
   createdAt DateTime  @default(now())
 
   // Связи
-  participations Participant[] // В каких чатах состоит
-  messages       Message[]     // Отправленные сообщения
+  participations Participant[]
+  messages       Message[]
+  posts          Post[]
+  likes          Like[]
+  comments       Comment[]
+
+  // Подписки
+  following      Follow[] @relation("Following")
+  followers      Follow[] @relation("Followers")
+}
+
+// === Подписки ===
+model Follow {
+  followerId  String
+  followingId String
+  createdAt   DateTime @default(now())
+
+  follower    User @relation("Following", fields: [followerId], references: [id])
+  following   User @relation("Followers", fields: [followingId], references: [id])
+
+  @@id([followerId, followingId])
+}
+
+// === Пост ===
+model Post {
+  id        String    @id @default(cuid())
+  content   String    @db.Text
+  image     String?
+  authorId  String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  author    User      @relation(fields: [authorId], references: [id])
+  likes     Like[]
+  comments  Comment[]
+}
+
+// === Лайк ===
+model Like {
+  userId    String
+  postId    String
+  createdAt DateTime @default(now())
+
+  user      User @relation(fields: [userId], references: [id])
+  post      Post @relation(fields: [postId], references: [id])
+
+  @@id([userId, postId])
+}
+
+// === Комментарий ===
+model Comment {
+  id        String   @id @default(cuid())
+  content   String   @db.Text
+  userId    String
+  postId    String
+  createdAt DateTime @default(now())
+
+  user      User @relation(fields: [userId], references: [id])
+  post      Post @relation(fields: [postId], references: [id])
 }
 
 // === Чат (Комната) ===
 model Conversation {
   id        String           @id @default(cuid())
   type      ConversationType @default(PRIVATE)
-  name      String?          // Название (только для групп)
-  avatar    String?          // Аватар группы
+  name      String?
+  avatar    String?
   createdAt DateTime         @default(now())
   updatedAt DateTime         @updatedAt
 
-  // Связи
   participants Participant[]
   messages     Message[]
 }
 
 // === Участник чата ===
-// (Связующая таблица между User и Conversation)
 model Participant {
   id             String          @id @default(cuid())
   userId         String
@@ -72,7 +127,7 @@ model Participant {
   user         User         @relation(fields: [userId], references: [id])
   conversation Conversation @relation(fields: [conversationId], references: [id])
 
-  @@unique([userId, conversationId]) // Один пользователь не может быть в одном чате дважды
+  @@unique([userId, conversationId])
 }
 
 // === Сообщение ===

@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useRef, FormEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 interface Particle {
     x: number;
@@ -231,9 +232,9 @@ export default function AuthorizationForm() {
                 <footer className="mt-10 pt-6 border-t border-zinc-800 text-center relative z-10">
                     <p className="text-zinc-400 text-sm">
                         Don't have account?{' '}
-                        <a className="text-mesh-neon font-semibold hover:underline decoration-2 underline-offset-4 ml-1" href="/register">
+                        <Link className="text-mesh-neon font-semibold hover:underline decoration-2 underline-offset-4 ml-1" href="/register">
                             Registration
-                        </a>
+                        </Link>
                     </p>
                 </footer>
             </main>

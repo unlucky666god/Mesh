@@ -1,7 +1,7 @@
 // app/profile/[username]/page.tsx
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import TopNav from '@/components/layout/TopNav';
 import MobileNav from '@/components/layout/MobileNav';
@@ -10,73 +10,58 @@ import ProfileStats from '@/components/profile/ProfileStats';
 import PostCard, { type Post } from '@/components/profile/PostCard';
 import SidebarNav from '@/components/profile/SidebarNav';
 
-// Моковые данные (замените на API-запрос)
-const PROFILE_DATA = {
-  id: 'user-123',
-  name: 'Alex Rivers',
-  username: 'arivers_mesh',
-  avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB4hCK_aqL6XfscbjEbipmUfth-BHRvOO3OX8X9dYkJWTLmDVeJEJzLDwIlZnlw4ejfN8iB1yKuD24IikiUpLFyqIq8555G2g_q_jINTCvjBsISdla643AB2bkx84ubbJDBSjMiR2GggvTjJVXBreNDp202OekRlQMmKh8suhyoBX4dfkeMMnNh4ADn2qCKSpoWfjo3wfnqHh0Wc-1tE1vUZs8yBfbrgFI3drDQPEp37fRhuml9_VCAVqtO11hXzHzLGTtyYGzJji7Q',
-  coverImage: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAidSs22nPF55acHaQqLhPVUP6POWavetcR-u4pYkqlERs8sEqkSrUZW_GZhnNL92HOGcGxTfiiH7cmWhtGQK1Sqmmzc1hM4bfatPP-RD7ds9AVRtpsf5zJ0h-kdREgKvITI_pGHF84Dvhp5XaqG9WH21XL0GWVlSSQlu8iuddBZwhLq5K69NZotwVN4jir0tw9DFPA0Dmvv6gvFLd5mHEyY25xGlSx3YIabLhBWqqdkEszO6PwtUNGerFrRpOjTeprFgE0_6rQjpzV',
-  bio: 'Digital architect exploring the intersections of generative art and mesh networking. Building the decentralized future. ⚡️',
-  stats: { posts: 142, followers: '12.8k', following: 842 },
-  isFollowing: false,
-};
-
-const POSTS: Post[] = [
-  {
-    id: 'post-1',
-    author: {
-      name: 'Alex Rivers',
-      username: 'arivers_mesh',
-      avatar: PROFILE_DATA.avatar,
-    },
-    timestamp: '2h ago',
-    content: "Just deployed the new node clustering algorithm. The latency drops are significant! Mesh architecture is truly the future of local connectivity. #web3 #meshnetwork",
-    likes: 243,
-    comments: 18,
-    liked: false,
-  },
-  {
-    id: 'post-2',
-    author: {
-      name: 'Alex Rivers',
-      username: 'arivers_mesh',
-      avatar: PROFILE_DATA.avatar,
-    },
-    timestamp: '6h ago',
-    content: "New setup aesthetic. Neon vibes all night. 🧪",
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDj6NVqvTW42CiVytxpli6Z9aKt-CZjKXQjp5_hQuVsh9o9ch651TRDJGGUS-FM4Fl-cbsAEmI29w25iO5-zmbaWX7pFdFhBaRJM6-MX2GS82LsCPJU8DOdNZqg5OSlxBqzfPbXd1-j_Wx88ATP9r2cchm7lo-y9EKMz0Ds3N-Qw-eNQcnp3scbOcbkS7rI2GyBr_5Klp73ZCpPYqU492nx_nOR6tzXwvdEPEqSZqx9dqYTe_V0TFRlB8LzKjzNoE5GJBLeSD3wYRJU',
-    likes: 1200,
-    comments: 42,
-    liked: false,
-  },
-];
-
-const TRENDING = [
-  { tag: '#GenerativeArt', count: '2.4k meshers' },
-  { tag: '#Decentralized', count: '1.8k meshers' },
-  { tag: '#NeonNodes', count: '942 meshers' },
-];
-
 export default function ProfilePage() {
   const params = useParams();
   const username = params.username as string;
   
-  const [profile, setProfile] = useState(PROFILE_DATA);
-  const [posts, setPosts] = useState(POSTS);
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'feed' | 'media'>('feed');
 
-  const handleFollow = () => {
-    setProfile(prev => ({ ...prev, isFollowing: !prev.isFollowing }));
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const res = await fetch(`/api/users/${username}`);
+        if (res.ok) {
+          const data = await res.json();
+          setUser(data.user);
+        }
+      } catch (err) {
+        console.error('Failed to fetch user:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (username) fetchUser();
+  }, [username]);
+
+  const handleFollow = async () => {
+    try {
+      const res = await fetch(`/api/users/${username}/follow`, { method: 'POST' });
+      if (res.ok) {
+        const data = await res.json();
+        // Update user state to reflect new follower count/status
+        // For simplicity, refetch or update count manually
+        setUser((prev: any) => ({
+          ...prev,
+          _count: {
+            ...prev._count,
+            followers: data.isFollowing ? prev._count.followers + 1 : prev._count.followers - 1
+          },
+          isFollowing: data.isFollowing
+        }));
+      }
+    } catch (err) {
+      console.error('Failed to follow user:', err);
+    }
   };
 
   const handleLike = (postId: string) => {
-    setPosts(prev => prev.map(post => 
-      post.id === postId 
-        ? { ...post, liked: !post.liked, likes: post.liked ? post.likes - 1 : post.likes + 1 }
-        : post
-    ));
+    // Implement like logic
   };
+
+  if (loading) return <div className="min-h-screen bg-background-dark flex items-center justify-center text-accent-neon font-mono animate-pulse">Accessing node ${username}...</div>;
+  if (!user) return <div className="min-h-screen bg-background-dark flex items-center justify-center text-red-500 font-mono">Node ${username} not found.</div>;
 
   return (
     <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-sans">
@@ -91,12 +76,19 @@ export default function ProfilePage() {
           
           {/* Шапка профиля */}
           <ProfileHeader 
-            profile={profile}
+            profile={{
+              ...user,
+              isFollowing: user.isFollowing // Assume API returns this
+            }}
             onFollow={handleFollow}
           />
 
           {/* Статистика */}
-          <ProfileStats stats={profile.stats} />
+          <ProfileStats stats={{
+            posts: user._count.posts,
+            followers: user._count.followers,
+            following: user._count.following
+          }} />
 
           {/* Лента постов */}
           <div className="mt-4 flex flex-col gap-6 max-w-2xl mx-auto w-full px-4">
@@ -107,7 +99,7 @@ export default function ProfilePage() {
               <div className="flex gap-2">
                 <button 
                   className={`text-sm font-semibold transition-colors ${
-                    activeTab === 'feed' ? 'text-primary' : 'text-slate-500 hover:text-slate-300'
+                    activeTab === 'feed' ? 'text-accent-neon' : 'text-slate-500 hover:text-slate-300'
                   }`}
                   onClick={() => setActiveTab('feed')}
                 >
@@ -116,7 +108,7 @@ export default function ProfilePage() {
                 <span className="text-slate-700">|</span>
                 <button 
                   className={`text-sm font-semibold transition-colors ${
-                    activeTab === 'media' ? 'text-primary' : 'text-slate-500 hover:text-slate-300'
+                    activeTab === 'media' ? 'text-accent-neon' : 'text-slate-500 hover:text-slate-300'
                   }`}
                   onClick={() => setActiveTab('media')}
                 >
@@ -126,10 +118,17 @@ export default function ProfilePage() {
             </div>
 
             {/* Посты */}
-            {activeTab === 'feed' && posts.map(post => (
+            {activeTab === 'feed' && user.posts.map((post: any) => (
               <PostCard 
                 key={post.id} 
-                post={post} 
+                post={{
+                  ...post,
+                  stats: {
+                    likes: post._count.likes.toString(),
+                    comments: post._count.comments.toString(),
+                    shares: "0"
+                  }
+                }}
                 onLike={() => handleLike(post.id)} 
               />
             ))}
@@ -145,7 +144,7 @@ export default function ProfilePage() {
 
         {/* Боковая панель (десктоп) */}
         <aside className="hidden lg:flex flex-col gap-4 w-64 sticky top-24 h-fit">
-          <SidebarNav active="profile" trending={TRENDING} />
+          <SidebarNav active="profile" trending={[]} />
         </aside>
 
       </main>

@@ -24,7 +24,5 @@ export async function GET(req: NextRequest) {
     } catch (error) {
         console.error("Auth me error:", error);
         return NextResponse.json({ error: "Invalid token" }, { status: 401 });
-    } finally {
-        await prisma.$disconnect();
     }
 }
