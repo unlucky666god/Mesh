@@ -96,7 +96,8 @@ export default function ProfilePage() {
           <ProfileHeader 
             profile={{
               ...user,
-              isFollowing: user.isFollowing // Assume API returns this
+              isFollowing: user.isFollowing, // Assume API returns this
+              isMe: user.isMe
             }}
             onFollow={handleFollow}
             onMessage={handleSendMessage}

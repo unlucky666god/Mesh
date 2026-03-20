@@ -170,6 +170,40 @@ export default function MessengerPage() {
     setNewMessage('');
   };
 
+  const handleSelectUser = async (user: any) => {
+    try {
+      const res = await fetch('/api/conversations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ recipientId: user.id }),
+      });
+      if (res.ok) {
+        const { conversation } = await res.json();
+        
+        // Check if chat already exists in the list
+        const existingChat = chats.find(c => c.id === conversation.id);
+        if (existingChat) {
+          setActiveChat(existingChat);
+        } else {
+          // If not, we might need to fetch the updated chat list or manually add it
+          const newChat: Chat = {
+            id: conversation.id,
+            name: user.name,
+            avatar: user.avatar,
+            lastMessage: "No messages yet",
+            time: "New",
+            online: false // We don't know the status yet
+          };
+          setChats(prev => [newChat, ...prev]);
+          setActiveChat(newChat);
+        }
+        router.push(`/messenger?chatId=${conversation.id}`);
+      }
+    } catch (err) {
+      console.error('Failed to start conversation:', err);
+    }
+  };
+
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -209,6 +243,7 @@ export default function MessengerPage() {
           placeholder="Search network..." 
           className="hidden md:block w-64" 
           inputClassName="rounded-lg py-2"
+          onSelect={handleSelectUser}
         />
 
         <div className="flex items-center gap-4">

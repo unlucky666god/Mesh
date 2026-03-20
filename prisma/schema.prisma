@@ -51,6 +51,7 @@ model User {
   // Подписки
   following      Follow[] @relation("Following")
   followers      Follow[] @relation("Followers")
+  @@map("users")
 }
 
 // === Подписки ===

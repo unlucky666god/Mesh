@@ -38,9 +38,12 @@ export async function GET(
 
         const token = req.cookies.get("token")?.value;
         let isFollowing = false;
+        let isMe = false;
         if (token) {
             try {
                 const decoded = verify(token, process.env.JWT_SECRET!) as { id: string };
+                isMe = decoded.id === user.id;
+                
                 const follow = await prisma.follow.findUnique({
                     where: {
                         followerId_followingId: {
@@ -56,7 +59,8 @@ export async function GET(
         return NextResponse.json({ 
             user: {
                 ...user,
-                isFollowing
+                isFollowing,
+                isMe
             } 
         });
     } catch (error) {

@@ -13,12 +13,14 @@ interface UserSearchProps {
   placeholder?: string;
   className?: string;
   inputClassName?: string;
+  onSelect?: (user: UserSearchResult) => void;
 }
 
 export default function UserSearch({ 
   placeholder = "Search network...", 
   className = "",
-  inputClassName = ""
+  inputClassName = "",
+  onSelect
 }: UserSearchProps) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<UserSearchResult[]>([]);
@@ -76,8 +78,12 @@ export default function UserSearch({
           {results.map((user) => (
             <Link
               key={user.id}
-              href={`/profile/${user.name}`}
-              onClick={() => {
+              href={onSelect ? '#' : `/profile/${user.name}`}
+              onClick={(e) => {
+                if (onSelect) {
+                  e.preventDefault();
+                  onSelect(user);
+                }
                 setShowDropdown(false);
                 setQuery('');
               }}
