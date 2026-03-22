@@ -32,7 +32,7 @@ export default function ProfileHeader({ profile, onFollow, onMessage }: ProfileH
         <div className="size-32 lg:size-40 rounded-full border-4 border-background-dark bg-background-dark overflow-hidden shadow-2xl">
           <img 
             className="h-full w-full object-cover" 
-            src={profile.avatar || 'https://lh3.googleusercontent.com/a/ACg8ocL8vGf-fJ0fUqR_V_6Y-8y_vV_VvV_VvV_VvV_V=s96-c'}
+            src={profile.avatar || 'https://lh3.googleusercontent.com/aida-public/AB6AXuDWOcupY-lVeF2m__7xGAxr56tRQ5ybg7P51rG4aHjeAQAsbMv67QF6C8WTkXZFUNxZs7Y5dbGZ7Hhw8BNa_1WIgI9RfJjY6g7qnDf0zsmI4klIlu4Trag-5eYeE1n34u0EWzuzULoXrmHbjvvH99IyXyxkIyW8XB2VHUUmNdV16ZTvH1dZ7MKLVZrerEgW2K47zi_2LK85vZMKdxnOHK0Z_klAi601Y0gMT7fn8m1Z-pHg0zVOFz4gp7GS450pBl-ynhMkeMFjFBCz'}
             alt={`${profile.name} avatar`}
           />
         </div>
@@ -40,7 +40,7 @@ export default function ProfileHeader({ profile, onFollow, onMessage }: ProfileH
         <div className="mt-4 text-center">
           <h1 className="text-3xl font-bold text-slate-100">{profile.name}</h1>
           <p className="text-accent-neon font-medium">@{profile.name}</p>
-          <p className="mt-3 max-w-md text-slate-400 text-base">{profile.bio || 'Digital architect exploring the intersections of generative art and mesh networking. Building the decentralized future. ⚡️'}</p>
+          <p className="mt-3 max-w-md text-slate-400 text-base">{profile.bio || 'Dream. Create. Share.'}</p>
         </div>
 
         {/* Кнопки */}

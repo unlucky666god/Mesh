@@ -40,7 +40,7 @@ export function ChatItem({
       <div className="relative shrink-0">
         <img 
           className="size-12 rounded-full object-cover"
-          src={avatar}
+          src={avatar || "https://lh3.googleusercontent.com/aida-public/AB6AXuDWOcupY-lVeF2m__7xGAxr56tRQ5ybg7P51rG4aHjeAQAsbMv67QF6C8WTkXZFUNxZs7Y5dbGZ7Hhw8BNa_1WIgI9RfJjY6g7qnDf0zsmI4klIlu4Trag-5eYeE1n34u0EWzuzULoXrmHbjvvH99IyXyxkIyW8XB2VHUUmNdV16ZTvH1dZ7MKLVZrerEgW2K47zi_2LK85vZMKdxnOHK0Z_klAi601Y0gMT7fn8m1Z-pHg0zVOFz4gp7GS450pBl-ynhMkeMFjFBCz"}
           alt={`${name} avatar`}
         />
         {online && (
@@ -52,21 +52,30 @@ export function ChatItem({
       <div className="flex-1 min-w-0">
         <div className="flex justify-between items-baseline">
           <p className={`
-            font-semibold text-sm truncate transition-colors
-            ${active ? 'text-accent-neon' : 'text-slate-900 dark:text-slate-100'}
+            text-[18px] font-bold transition-colors shrink-0
+            ${active 
+              ? 'text-accent-neon' 
+              : 'text-white md:text-slate-500' 
+            }
           `}>
             {name}
           </p>
           <span className={`
-            text-[10px] font-bold transition-colors
-            ${active ? 'text-accent-neon' : 'text-slate-500'}
+            text-[10px] font-bold transition-colors shrink-0 ml-2
+            ${active 
+              ? 'text-accent-neon' 
+              : 'text-white md:text-slate-500' 
+            }
           `}>
             {time}
           </span>
         </div>
         <p className={`
-          text-xs truncate font-medium transition-colors
-          ${active ? 'text-accent-neon' : 'text-slate-500'}
+          text-xs truncate font-medium transition-colors mt-0.5
+          ${active 
+            ? 'text-accent-neon' 
+            : 'text-white/90 md:text-slate-500'
+          }
         `}>
           {lastMessage}
         </p>

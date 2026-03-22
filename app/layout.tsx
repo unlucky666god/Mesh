@@ -3,6 +3,8 @@ import { Geist, Geist_Mono, Inter, JetBrains_Mono, Public_Sans } from "next/font
 import "./globals.css";
 import { SocketProvider } from "../context/socketContext";
 import { cookies } from "next/headers";
+import MobileNav from "@/components/layout/MobileNav";
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -47,13 +49,14 @@ export default async function RootLayout({
   const token = cookieStore.get("token")?.value || "";
 
   return (
-    <html lang="en" className={`dark ${publicSans.variable} ${jetbrainsMono.variable}`}>
+    <html lang="ru" className={`dark ${publicSans.variable} ${jetbrainsMono.variable}`}>
       <body className="font-sans bg-background-dark text-slate-100 min-h-screen antialiased">
         {/* Material Symbols */}
         <link
           rel="stylesheet"
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"
         />
+        <MobileNav />
         <SocketProvider token={token}>
           {children}
         </SocketProvider>

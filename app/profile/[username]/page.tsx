@@ -7,8 +7,8 @@ import TopNav from '@/components/layout/TopNav';
 import MobileNav from '@/components/layout/MobileNav';
 import ProfileHeader from '@/components/profile/ProfileHeader';
 import ProfileStats from '@/components/profile/ProfileStats';
-import PostCard, { type Post } from '@/components/profile/PostCard';
-import SidebarNav from '@/components/profile/SidebarNav';
+import PostCard, { type Post } from '@/components/feed/PostCard';
+import SidebarNav from '@/components/layout/SidebarNav';
 
 export default function ProfilePage() {
   const params = useParams();
@@ -84,10 +84,9 @@ export default function ProfilePage() {
   return (
     <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-sans">
       
-      {/* Верхняя навигация */}
       <TopNav />
 
-      <main className="flex flex-1 flex-col lg:flex-row lg:px-20 py-6 gap-8">
+      <main className="flex flex-1 flex-col lg:flex-row lg:px-20 pt-6 pb-24 lg:pb-6 gap-8">
         
         {/* Основной контент */}
         <div className="flex-1 flex flex-col gap-6">
@@ -163,9 +162,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Боковая панель (десктоп) */}
-        <aside className="hidden lg:flex flex-col gap-4 w-64 sticky top-24 h-fit">
-          <SidebarNav active="profile" trending={[]} />
-        </aside>
+        <SidebarNav />
 
       </main>
 

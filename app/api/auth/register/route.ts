@@ -9,13 +9,29 @@ const generateToken = (id: string) => {
 };
 
 export async function POST(req: NextRequest) {
-    try{
+    try {
         const { email, password, name, phone } = await req.json();
 
-        const existingUser = await prisma.user.findUnique({ where: { email }});
+        const existingUser = await prisma.user.findFirst({
+            where: {
+                OR: [
+                    { email },
+                    { phone },
+                    { name }
+                ]
+            }
+        });
 
-        if(existingUser) {
-            return Response.json({ error: "User already exists" }, { status: 400 });
+        if (existingUser) {
+            if (existingUser.email === email) {
+                return Response.json({ error: "User with this email already exists" }, { status: 400 });
+            }
+            if (existingUser.phone === phone) {
+                return Response.json({ error: "User with this phone already exists" }, { status: 400 });
+            }
+            if (existingUser.name === name) {
+                return Response.json({ error: "User with this name already exists" }, { status: 400 });
+            }
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
@@ -43,7 +59,7 @@ export async function POST(req: NextRequest) {
         })
 
         return response;
-    } catch(error) {
-        return Response.json({ error: "Server error"}, { status: 500});
+    } catch (error) {
+        return Response.json({ error: "Server error" }, { status: 500 });
     }
 }

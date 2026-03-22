@@ -35,6 +35,7 @@ export async function GET(req: NextRequest) {
             const other = p.conversation.participants.find(p2 => p2.userId !== decoded.id);
             return {
                 id: p.conversationId,
+                type: p.conversation.type,
                 name: p.conversation.type === "PRIVATE" ? other?.user.name : p.conversation.name,
                 avatar: p.conversation.type === "PRIVATE" ? other?.user.avatar : p.conversation.avatar,
                 lastMessage: p.conversation.messages[0]?.content || "No messages yet",
