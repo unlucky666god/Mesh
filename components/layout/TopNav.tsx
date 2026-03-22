@@ -16,23 +16,27 @@ interface HeaderProps {
 
 export default function TopNav({ user: initialUser }: HeaderProps) {
     const [user, setUser] = useState<User | null>(initialUser || null);
+    const [mounted, setMounted] = useState(false);
 
+    // Устанавливаем mounted в true только после того, как компонент появился в браузере
     useEffect(() => {
+        setMounted(true);
+        
         if (!initialUser) {
             fetch('/api/auth/me')
                 .then(res => res.ok ? res.json() : null)
-                .then(data => data && setUser(data.user));
+                .then(data => data && setUser(data.user))
+                .catch(err => console.error("Auth check failed:", err));
         }
     }, [initialUser]);
 
     return (
-        <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-background-dark/80 backdrop-blur-md px-6 lg:px-40 py-4" >
+        <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-background-dark/80 backdrop-blur-md px-6 lg:px-40 py-4">
             <div className="mx-auto flex max-w-[1200px] items-center justify-between gap-4">
 
-                {/* Логотип */}
+                {/* Логотип: Статичен, не вызывает ошибок */}
                 <div className="flex items-center shrink-0">
                     <div className="flex items-center gap-3">
-                        {/* Квадрат с буквой M — виден всегда */}
                         <div className="size-10 flex items-center justify-center bg-accent-neon rounded-lg text-black shadow-[0_0_15px_rgba(57,255,20,0.5)]">
                             <span className="font-mono font-extrabold text-xl">M</span>
                         </div>
@@ -45,22 +49,42 @@ export default function TopNav({ user: initialUser }: HeaderProps) {
                     </div>
                 </div>
 
-                {/* Правая часть: поиск и аватар */}
+                {/* Правая часть */}
                 <div className="flex flex-1 justify-end items-center gap-6">
 
-                    {/* Поиск: 
-                        На мобилках (маленьких экранах) он виден ВСЕГДА.
-                        На больших экранах он также остается. 
-                    */}
+                    {/* Поиск */}
                     <div className="w-full max-w-[300px] sm:max-w-none sm:w-auto">
                         <UserSearch
                             placeholder="Search..."
-                            className="block" // Теперь поиск виден всегда
-                            inputClassName="w-full sm:w-40 lg:w-64 rounded-full py-1.5 bg-white/5 border-white/10 focus:border-accent-neon/50 transition-all"
+                            className="block"
+                            inputClassName="w-full sm:w-40 lg:w-64 rounded-full py-1.5 bg-white/5 border-white/10 focus:border-accent-neon/50 transition-all text-white"
                         />
                     </div>
+
+                    {/* ДИНАМИЧЕСКИЙ БЛОК: 
+                        Мы рендерим обертку всегда, чтобы место было зарезервировано, 
+                        но контент внутри (кнопку профиля) — только после mounted. 
+                    */}
+                    <div className="flex items-center min-w-[40px] justify-center">
+                        {mounted && user ? (
+                            <Link 
+                                href={`/profile/${user.name}`}
+                                className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+                            >
+                                <div className="size-10 rounded-full border border-accent-neon/30 flex items-center justify-center bg-white/5 shadow-[0_0_10px_rgba(57,255,20,0.2)]">
+                                    <span className="material-symbols-outlined text-accent-neon text-[24px]">
+                                        account_circle
+                                    </span>
+                                </div>
+                            </Link>
+                        ) : (
+                            /* Пустой контейнер или лоадер того же размера, что и аватар */
+                            <div className="size-10" />
+                        )}
+                    </div>
+
                 </div>
             </div>
-        </header >
+        </header>
     );
 }

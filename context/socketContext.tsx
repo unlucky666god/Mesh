@@ -1,6 +1,7 @@
 'use client';
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
+import 'dotenv/config';
 
 interface MessageData {
   id: string;
@@ -31,7 +32,7 @@ export const SocketProvider = ({ children, token }: { children: React.ReactNode,
   useEffect(() => {
     if (!token) return;
     
-    const s = io('http://localhost:4000', { 
+    const s = io(process.env.SOCKET_HOST, { 
       auth: { token },
       reconnectionAttempts: 5,
     });
