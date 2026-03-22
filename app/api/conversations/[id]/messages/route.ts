@@ -38,7 +38,7 @@ export async function GET(
             orderBy: { createdAt: "desc" } // Сначала берем самые свежие
         });
 
-        const formattedMessages = messages.map(msg => ({
+        const formattedMessages = messages.map((msg: any) => ({
             id: msg.id,
             senderId: msg.senderId === decoded.id ? 'me' : msg.senderId,
             text: msg.content,
