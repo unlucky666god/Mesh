@@ -16,6 +16,7 @@ interface HeaderProps {
 
 export default function TopNav({ user: initialUser }: HeaderProps) {
     const [user, setUser] = useState<User | null>(initialUser || null);
+    const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
         if (!initialUser) {
@@ -60,15 +61,12 @@ export default function TopNav({ user: initialUser }: HeaderProps) {
                         />
                     </div>
 
-                    {user && (
-                        <Link
-                            href={`/profile/${user.name}`}
-                            className="hidden sm:flex size-10 rounded-full border-2 border-accent-neon/50 p-0.5 hover:border-accent-neon transition-all cursor-pointer overflow-hidden shrink-0"
-                        >
+                    {mounted && user && (
+                        <Link href={`/profile/${user.name}`} className="...">
                             <img
-                                src={user.avatar || "https://lh3.googleusercontent.com/aida-public/AB6AXuDWOcupY-lVeF2m__7xGAxr56tRQ5ybg7P51rG4aHjeAQAsbMv67QF6C8WTkXZFUNxZs7Y5dbGZ7Hhw8BNa_1WIgI9RfJjY6g7qnDf0zsmI4klIlu4Trag-5eYeE1n34u0EWzuzULoXrmHbjvvH99IyXyxkIyW8XB2VHUUmNdV16ZTvH1dZ7MKLVZrerEgW2K47zi_2LK85vZMKdxnOHK0Z_klAi601Y0gMT7fn8m1Z-pHg0zVOFz4gp7GS450pBl-ynhMkeMFjFBCz"}
+                                src={user.avatar || "/default-avatar.png"} // Лучше локальный путь
                                 alt={`${user.name}'s avatar`}
-                                className="w-full h-full rounded-full object-cover"
+                                className="..."
                             />
                         </Link>
                     )}

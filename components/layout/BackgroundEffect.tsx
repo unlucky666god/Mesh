@@ -1,5 +1,5 @@
 'use client';
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 
 interface Particle {
     x: number;
@@ -12,8 +12,10 @@ const NEON_COLOR = '#39FF14';
 
 export default function BackgroundEffect() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
+        setMounted(true);
         const canvas = canvasRef.current;
         if (!canvas) return;
         const ctx = canvas.getContext('2d');
@@ -89,6 +91,8 @@ export default function BackgroundEffect() {
             cancelAnimationFrame(animationFrameId);
         };
     }, []);
+
+    if (!mounted) return <div style={{ position: 'fixed', inset: 0, zIndex: 10 }} />;
 
     return (
         <canvas
