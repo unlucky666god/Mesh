@@ -10,6 +10,12 @@ export default function MobileNav() {
   const pathname = usePathname();
   const [username, setUsername] = useState<string | null>(null);
 
+  const hideOnPaths = ['/login', '/register'];
+
+  if (hideOnPaths.includes(pathname)) {
+    return null;
+  }
+
   // Получаем данные пользователя при монтировании
   useEffect(() => {
     const fetchUser = async () => {
