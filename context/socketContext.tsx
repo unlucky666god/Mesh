@@ -32,7 +32,7 @@ export const SocketProvider = ({ children, token }: { children: React.ReactNode,
   useEffect(() => {
     if (!token) return;
     
-    const s = io(process.env.SOCKET_HOST, { 
+    const s = io((process.env.NEXT_PUBLIC_SOCKET_HOST, { 
       auth: { token },
       reconnectionAttempts: 5,
     });
