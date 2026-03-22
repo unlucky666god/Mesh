@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { sign } from "jsonwebtoken";
 import { prisma } from "../../../lib/prisma";
 import bcrypt from "bcryptjs";
+export const dynamic = 'force-dynamic';
 
 const generateToken = (id: string) => {
     return sign({ id }, process.env.JWT_SECRET!, { expiresIn: '30d' });

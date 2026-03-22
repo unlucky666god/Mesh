@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from "../../../lib/prisma";
 import { ResponseCookies } from 'next/dist/compiled/@edge-runtime/cookies';
+export const dynamic = 'force-dynamic';
 
 const generateToken = (id: string) => {
     return sign({ id }, process.env.JWT_SECRET!, { expiresIn: '30d' });
