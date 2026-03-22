@@ -2,38 +2,52 @@ import { NextRequest, NextResponse } from "next/server";
 import { sign } from "jsonwebtoken";
 import { prisma } from "../../../lib/prisma";
 import bcrypt from "bcryptjs";
+
+// Эти настройки важны, чтобы Next.js не пытался пре-рендерить API роут
 export const dynamic = 'force-dynamic';
-export const fetchCache = 'force-no-store';
 
 const generateToken = (id: string) => {
-    return sign({ id }, process.env.JWT_SECRET!, { expiresIn: '30d' });
+    if (!process.env.JWT_SECRET) {
+        throw new Error("JWT_SECRET is not defined");
+    }
+    return sign({ id }, process.env.JWT_SECRET, { expiresIn: '30d' });
 };
 
 export async function POST(req: NextRequest) {
     try {
         const { email, password } = await req.json();
 
+        if (!email || !password) {
+            return NextResponse.json({ error: "Email and password are required" }, { status: 400 });
+        }
+
         const user = await prisma.user.findUnique({ where: { email } });
 
-        if (!user || !bcrypt.compareSync(password, user.password)) {
-            return Response.json({ error: "Invalid credentials" }, { status: 401 });
+        // Важно: bcrypt.compare — асинхронная функция, лучше использовать её
+        const isPasswordValid = user ? await bcrypt.compare(password, user.password) : false;
+
+        if (!user || !isPasswordValid) {
+            return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
         }
 
         const token = generateToken(user.id);
 
-        const response = NextResponse.json({ message: "Login successful" });
+        const response = NextResponse.json(
+            { message: "Login successful" },
+            { status: 200 }
+        );
 
         response.cookies.set('token', token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
-            maxAge: 60 * 60 * 24 * 30, // 30 дней
-            sameSite: 'strict', // вместо `strict` как standalone
-            path: '/',           // путь доступа cookie
+            maxAge: 60 * 60 * 24 * 30,
+            sameSite: 'strict',
+            path: '/',
         });
 
         return response;
     } catch (error) {
-        console.error("Login error:", error); // Логирование ошибки
-        return Response.json({ error: "Server error" }, { status: 500 });
+        console.error("Login error:", error);
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }
