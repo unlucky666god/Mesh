@@ -16,7 +16,6 @@ interface HeaderProps {
 
 export default function TopNav({ user: initialUser }: HeaderProps) {
     const [user, setUser] = useState<User | null>(initialUser || null);
-    const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
         if (!initialUser) {
@@ -60,16 +59,6 @@ export default function TopNav({ user: initialUser }: HeaderProps) {
                             inputClassName="w-full sm:w-40 lg:w-64 rounded-full py-1.5 bg-white/5 border-white/10 focus:border-accent-neon/50 transition-all"
                         />
                     </div>
-
-                    {mounted && user && (
-                        <Link href={`/profile/${user.name}`} className="...">
-                            <img
-                                src={user.avatar || "/default-avatar.png"} // Лучше локальный путь
-                                alt={`${user.name}'s avatar`}
-                                className="..."
-                            />
-                        </Link>
-                    )}
                 </div>
             </div>
         </header >

@@ -22,6 +22,7 @@ export default function FeedPage() {
   const [postText, setPostText] = useState('');
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     const fetchPosts = async () => {

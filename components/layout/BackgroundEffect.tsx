@@ -90,7 +90,7 @@ export default function BackgroundEffect() {
             window.removeEventListener('resize', handleResize);
             cancelAnimationFrame(animationFrameId);
         };
-    }, []);
+    }, [mounted]);
 
     if (!mounted) return <div style={{ position: 'fixed', inset: 0, zIndex: 10 }} />;
 
