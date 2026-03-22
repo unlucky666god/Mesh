@@ -5,7 +5,8 @@ const nextConfig: NextConfig = {
   typescript: {
     // Игнорируем ошибки типов при сборке
     ignoreBuildErrors: true,
-  }
+  },
+  staticPageGenerationTimeout: 1000,
 };
 
 export default nextConfig;
