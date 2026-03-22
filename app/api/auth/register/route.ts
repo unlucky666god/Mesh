@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from "../../../lib/prisma";
 import { ResponseCookies } from 'next/dist/compiled/@edge-runtime/cookies';
 export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
 
 const generateToken = (id: string) => {
     return sign({ id }, process.env.JWT_SECRET!, { expiresIn: '30d' });

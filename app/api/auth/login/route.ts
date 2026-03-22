@@ -3,6 +3,7 @@ import { sign } from "jsonwebtoken";
 import { prisma } from "../../../lib/prisma";
 import bcrypt from "bcryptjs";
 export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
 
 const generateToken = (id: string) => {
     return sign({ id }, process.env.JWT_SECRET!, { expiresIn: '30d' });
