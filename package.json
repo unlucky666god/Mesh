@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
+    "start": "next start -p 80",
     "server": "tsx server/index.js",
     "dev:all": "concurrently \"npm run dev\" \"npm run server\""
   },
