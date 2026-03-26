@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
                 name,
                 participants: {
                     create: [
-                        { userId: decoded.id, role: "ADMIN" },
+                        { userId: decoded.id, role: "MEMBER" },
                         { userId: recipientId, role: "MEMBER" }
                     ]
                 }

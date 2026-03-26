@@ -65,23 +65,7 @@ export default function TopNav({ user: initialUser }: HeaderProps) {
                         Мы рендерим обертку всегда, чтобы место было зарезервировано, 
                         но контент внутри (кнопку профиля) — только после mounted. 
                     */}
-                    <div className="flex items-center min-w-[40px] justify-center">
-                        {mounted && user ? (
-                            <Link 
-                                href={`/profile/${user.name}`}
-                                className="flex items-center gap-2 hover:opacity-80 transition-opacity"
-                            >
-                                <div className="size-10 rounded-full border border-accent-neon/30 flex items-center justify-center bg-white/5 shadow-[0_0_10px_rgba(57,255,20,0.2)]">
-                                    <span className="material-symbols-outlined text-accent-neon text-[24px]">
-                                        account_circle
-                                    </span>
-                                </div>
-                            </Link>
-                        ) : (
-                            /* Пустой контейнер или лоадер того же размера, что и аватар */
-                            <div className="size-10" />
-                        )}
-                    </div>
+                    
 
                 </div>
             </div>

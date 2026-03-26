@@ -20,6 +20,8 @@ interface SocketContextType {
   markAsRead: (conversationId: string, messageIds: string[]) => void;
   on: (event: string, callback: (...args: any[]) => void) => void;
   off: (event: string, callback: (...args: any[]) => void) => void;
+  deleteMessage: (conversationId: string, messageId: string) => void;
+  editMessage: (conversationId: string, messageId: string, newText: string) => void;
 }
 
 const SocketContext = createContext<SocketContextType | undefined>(undefined);
@@ -28,11 +30,13 @@ export const SocketProvider = ({ children, token }: { children: React.ReactNode,
   const [socket, setSocket] = useState<Socket | null>(null);
   const [connected, setConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [messages, setMessages] = useState<any[]>([]);
+  console.log("Socket env host: ", process.env.NEXT_PUBLIC_SOCKET_HOST);
 
   useEffect(() => {
     if (!token) return;
-    
-    const s = io(process.env.NEXT_PUBLIC_SOCKET_HOST, { 
+
+    const s = io(process.env.NEXT_PUBLIC_SOCKET_HOST, {
       auth: { token },
       reconnectionAttempts: 5,
     });
@@ -85,16 +89,51 @@ export const SocketProvider = ({ children, token }: { children: React.ReactNode,
     }
   }, [socket]);
 
+  const deleteMessage = async (conversationId: string, messageId: string) => {
+    try {
+      const res = await fetch(`/api/conversations/${conversationId}/messages/${messageId}`, {
+        method: 'DELETE',
+      });
+
+      if (res.ok) {
+        socket?.emit('message:delete', { conversationId, messageId });
+      } else {
+        console.error("Failed to delete from DB");
+
+      }
+    } catch (err) {
+      console.error("Delete request error:", err);
+    }
+  };
+
+  const editMessage = async (conversationId: string, messageId: string, newText: string) => {
+    try {
+      const res = await fetch(`/api/conversations/${conversationId}/messages/${messageId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: newText }),
+      });
+
+      if (res.ok) {
+        socket?.emit('message:edit', { conversationId, messageId, text: newText });
+      }
+    } catch (err) {
+      console.error("Edit failed:", err);
+    }
+  };
+
   return (
-    <SocketContext.Provider value={{ 
-      socket, 
-      connected, 
-      error, 
-      joinConversation, 
-      sendMessage, 
-      markAsRead, 
-      on, 
-      off 
+    <SocketContext.Provider value={{
+      socket,
+      connected,
+      error,
+      joinConversation,
+      sendMessage,
+      markAsRead,
+      on,
+      off,
+      deleteMessage,
+      editMessage
     }}>
       {children}
     </SocketContext.Provider>

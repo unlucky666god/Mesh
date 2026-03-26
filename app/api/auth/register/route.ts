@@ -14,21 +14,31 @@ const generateToken = (id: string) => {
     return sign({ id }, secret, { expiresIn: '30d' });
 };
 
+const formatPhone = (phone: string | undefined | null) => {
+    if (!phone) return null;
+    return phone.replace(/\D/g, ''); // \D — это любой символ, кроме цифры
+};
+
 export async function POST(req: NextRequest) {
     try {
-        const { email, password, name, phone } = await req.json();
+        const { email, password, name, phone: rawPhone } = await req.json();
 
         // Проверка на наличие данных
         if (!email || !password || !name) {
             return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
         }
 
+        // Нормализация данных
+        const normalizedEmail = email.toLowerCase().trim();
+        const normalizedPhone = formatPhone(rawPhone);
+        const normalizedName = name.trim();
+
         const existingUser = await prisma.user.findFirst({
             where: {
                 OR: [
-                    { email },
-                    { phone: phone || undefined }, // Защита на случай если phone null
-                    { name }
+                    { email: normalizedEmail },
+                    { phone: normalizedPhone},
+                    { name: normalizedName }
                 ]
             }
         });
@@ -37,7 +47,7 @@ export async function POST(req: NextRequest) {
             if (existingUser.email === email) {
                 return NextResponse.json({ error: "User with this email already exists" }, { status: 400 });
             }
-            if (phone && existingUser.phone === phone) {
+            if (rawPhone && existingUser.phone === rawPhone) {
                 return NextResponse.json({ error: "User with this phone already exists" }, { status: 400 });
             }
             if (existingUser.name === name) {
@@ -49,9 +59,9 @@ export async function POST(req: NextRequest) {
 
         const user = await prisma.user.create({
             data: {
-                name,
-                email,
-                phone,
+                name: normalizedName,
+                email: normalizedEmail,
+                phone: normalizedPhone,
                 password: hashedPassword,
                 // createdAt обычно прописывается по умолчанию в схеме Prisma, 
                 // но оставить здесь не ошибка
@@ -67,7 +77,7 @@ export async function POST(req: NextRequest) {
 
         response.cookies.set('token', token, {
             httpOnly: true,
-            secure: false,
+            secure: true,
             maxAge: 60 * 60 * 24 * 30,
             sameSite: 'lax',
             path: '/',

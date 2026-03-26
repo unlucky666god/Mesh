@@ -16,12 +16,15 @@ export default function MobileNav() {
       .then(data => data && setUsername(data.user.name));
   }, []);
 
-  if (!mounted || ['/login', '/register'].includes(pathname)) return null;
+  const isAuthPage = ['/login', '/register'].includes(pathname);
+  const isEditPage = pathname.endsWith('/edit');
+
+  if (!mounted || isAuthPage || isEditPage) return null;
 
   const items = [
     { id: 'home', icon: 'home', href: '/' },
     { id: 'messenger', icon: 'chat_bubble', href: '/messenger' },
-    { id: 'profile', icon: 'person', href: username ? `/profile/${username}` : '#' },
+    { id: 'profile', icon: 'person', href: username ? `/@${username}` : '#' },
   ];
 
   return (

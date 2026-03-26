@@ -1,7 +1,7 @@
-// app/profile/[username]/page.tsx
+// app/[username]/page.tsx
 'use client';
 
-import { useState, useEffect } from 'react';
+import { use, useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import TopNav from '@/components/layout/TopNav';
 import MobileNav from '@/components/layout/MobileNav';
@@ -9,12 +9,18 @@ import ProfileHeader from '@/components/profile/ProfileHeader';
 import ProfileStats from '@/components/profile/ProfileStats';
 import PostCard, { type Post } from '@/components/feed/PostCard';
 import SidebarNav from '@/components/layout/SidebarNav';
+import { EditProfileButton } from '@/components/profile/EditProfileButton';
 
-export default function ProfilePage() {
-  const params = useParams();
+export default function ProfilePage({ params }: { params: Promise<{ "%40username": string }> }) {
+  const resolvedParams = use(params);
+  const rawUsername = resolvedParams["%40username"];
   const router = useRouter();
-  const username = params.username as string;
-  
+
+  const decodedUsername = decodeURIComponent(rawUsername);
+  const username = decodedUsername.startsWith('@')
+    ? decodedUsername.slice(1)
+    : decodedUsername;
+
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'feed' | 'media'>('feed');
@@ -78,21 +84,21 @@ export default function ProfilePage() {
     // Implement like logic
   };
 
-  if (loading) return <div className="min-h-screen bg-background-dark flex items-center justify-center text-accent-neon font-mono animate-pulse">Accessing node {username}...</div>;
-  if (!user) return <div className="min-h-screen bg-background-dark flex items-center justify-center text-red-500 font-mono">Node {username} not found.</div>;
+  if (loading) return <div className="min-h-screen bg-background-dark flex items-center justify-center text-accent-neon font-mono animate-pulse">Accessing node @{username}...</div>;
+  if (!user) return <div className="min-h-screen bg-background-dark flex items-center justify-center text-red-500 font-mono">Node @{username} not found.</div>;
 
   return (
     <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-sans">
-      
+
       <TopNav />
 
       <main className="flex flex-1 flex-col lg:flex-row lg:px-20 pt-6 pb-24 lg:pb-6 gap-8">
-        
+
         {/* Основной контент */}
         <div className="flex-1 flex flex-col gap-6">
-          
+
           {/* Шапка профиля */}
-          <ProfileHeader 
+          <ProfileHeader
             profile={{
               ...user,
               isFollowing: user.isFollowing, // Assume API returns this
@@ -109,26 +115,28 @@ export default function ProfilePage() {
             following: user._count.following
           }} />
 
+          <div className="flex justify-center p-4">
+            <EditProfileButton username={user.name} />
+          </div>
+
           {/* Лента постов */}
           <div className="mt-4 flex flex-col gap-6 max-w-2xl mx-auto w-full px-4">
-            
+
             {/* Табы */}
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-bold text-slate-100">Recent Activity</h3>
               <div className="flex gap-2">
-                <button 
-                  className={`text-sm font-semibold transition-colors ${
-                    activeTab === 'feed' ? 'text-accent-neon' : 'text-slate-500 hover:text-slate-300'
-                  }`}
+                <button
+                  className={`text-sm font-semibold transition-colors ${activeTab === 'feed' ? 'text-accent-neon' : 'text-slate-500 hover:text-slate-300'
+                    }`}
                   onClick={() => setActiveTab('feed')}
                 >
                   Feed
                 </button>
                 <span className="text-slate-700">|</span>
-                <button 
-                  className={`text-sm font-semibold transition-colors ${
-                    activeTab === 'media' ? 'text-accent-neon' : 'text-slate-500 hover:text-slate-300'
-                  }`}
+                <button
+                  className={`text-sm font-semibold transition-colors ${activeTab === 'media' ? 'text-accent-neon' : 'text-slate-500 hover:text-slate-300'
+                    }`}
                   onClick={() => setActiveTab('media')}
                 >
                   Media
@@ -138,8 +146,8 @@ export default function ProfilePage() {
 
             {/* Посты */}
             {activeTab === 'feed' && user.posts.map((post: any) => (
-              <PostCard 
-                key={post.id} 
+              <PostCard
+                key={post.id}
                 post={{
                   ...post,
                   stats: {
@@ -147,8 +155,8 @@ export default function ProfilePage() {
                     comments: post._count.comments.toString(),
                     shares: "0"
                   }
-                }} 
-                onLike={() => handleLike(post.id)} 
+                }}
+                onLike={() => handleLike(post.id)}
               />
             ))}
 
@@ -162,12 +170,12 @@ export default function ProfilePage() {
         </div>
 
         {/* Боковая панель (десктоп) */}
-        <SidebarNav />
+        <SidebarNav user={user} />
 
       </main>
 
       {/* Мобильная навигация */}
-      <MobileNav active="profile" />
+      <MobileNav />
     </div>
   );
 }

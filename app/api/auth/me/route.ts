@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
         const decoded = verify(token, process.env.JWT_SECRET!) as { id: string };
         const user = await prisma.user.findUnique({
             where: { id: decoded.id },
-            select: { id: true, email: true, name: true, avatar: true }
+            select: { id: true, email: true, name: true, avatar: true, bio: true, phone: true, cover: true}
         });
 
         if (!user) {

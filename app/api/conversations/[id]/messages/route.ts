@@ -62,10 +62,10 @@ export async function GET(
             id: msg.id,
             senderId: msg.senderId === decoded.id ? 'me' : msg.senderId,
             text: msg.content,
-            timestamp: msg.createdAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            timestamp: msg.createdAt.toISOString().replace('Z', ''),
             status: msg.status.toLowerCase() as 'sent' | 'delivered' | 'read'
         })).reverse();
-
+        
         return NextResponse.json({ messages: formattedMessages });
     } catch (error) {
         console.error("Fetch messages error:", error);

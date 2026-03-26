@@ -7,6 +7,7 @@ import { ChatWindow } from '@/components/messenger/ChatWindow';
 import { useSocket } from '@/context/socketContext';
 import Link from 'next/link';
 import TopNav from "@/components/layout/TopNav";
+import SidebarNav from '../layout/SidebarNav';
 
 // === Типы === (Оставлены без изменений)
 interface Chat {
@@ -29,6 +30,10 @@ interface Message {
 }
 
 export default function MessengerPage() {
+  const {
+    editMessage,
+  } = useSocket();
+
   const router = useRouter();
   const searchParams = useSearchParams();
   const chatIdParam = searchParams.get('chatId');
@@ -43,9 +48,9 @@ export default function MessengerPage() {
   const [loading, setLoading] = useState(true);
   const [authChecked, setAuthChecked] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-
   const activeChatRef = useRef<Chat | null>(null);
-  const { connected, error, joinConversation, sendMessage, markAsRead, on, off } = useSocket();
+  const { connected, error, joinConversation, sendMessage, markAsRead, on, off, deleteMessage, socket } = useSocket();
+  const [user, setUser] = useState<{ id: string; name: string } | null>(null);
 
   // === ПРОВЕРКА АВТОРИЗАЦИИ ===
   useEffect(() => {
@@ -58,6 +63,10 @@ export default function MessengerPage() {
         }
         const data = await res.json();
         setCurrentUserId(data.user.id);
+        setUser({
+          id: data.user.id,
+          name: data.user.name
+        });
       } catch {
         router.replace('/login');
         return;
@@ -171,17 +180,17 @@ export default function MessengerPage() {
   const handleNewMessage = useCallback((msg: any) => {
     const currentActiveChat = activeChatRef.current;
 
+    // Проверяем, относится ли сообщение к текущему открытому чату
     if (currentActiveChat?.id && msg.conversationId === currentActiveChat.id) {
+      // ВАЖНО: Сравниваем ID отправителя с текущим пользователем
       const isMe = String(msg.senderId) === String(currentUserId);
 
       const newMsg: Message = {
         id: msg.id,
         senderId: isMe ? 'me' : msg.senderId,
-        text: msg.content,
-        timestamp: new Date(msg.createdAt).toLocaleTimeString([], {
-          hour: '2-digit', minute: '2-digit'
-        }),
-        status: msg.status === 'read' ? 'read' : 'sent',
+        text: msg.text || msg.content, // Проверка на оба варианта поля
+        timestamp: new Date(msg.timestamp).toString(),
+        status: msg.status || 'sent',
       };
 
       setMessages(prev => {
@@ -194,36 +203,45 @@ export default function MessengerPage() {
       }
     }
 
+    // Обновляем текст последнего сообщения в списке чатов слева
     setChats(prev => prev.map(c =>
       c.id === msg.conversationId
-        ? { ...c, lastMessage: msg.content, time: 'Just now' }
+        ? { ...c, lastMessage: msg.text || msg.content, time: 'Just now' }
         : c
     ));
   }, [currentUserId, markAsRead]);
 
-  const handleStatusUpdate = useCallback(({ messageIds, status }: { messageIds: string[]; status: string }) => {
-    setMessages(prev => prev.map(msg =>
-      messageIds.includes(msg.id) && msg.senderId === 'me'
-        ? { ...msg, status: status as 'read' | 'delivered' | 'sent' }
-        : msg
-    ));
-  }, []);
-
   useEffect(() => {
-    if (!connected || !authChecked) return;
+    if (!connected || !authChecked || !socket) return;
 
     if (activeChat?.id) {
       joinConversation(activeChat.id);
     }
 
+    // Единый обработчик обновления статуса (приходит от сервера)
+    const handleStatusUpdate = ({ messageIds, status }: { messageIds: string[]; status: string }) => {
+      setMessages(prev => prev.map(msg =>
+        messageIds.includes(msg.id)
+          ? { ...msg, status: status as 'read' | 'delivered' | 'sent' }
+          : msg
+      ));
+    };
+
+    const handleDeleted = ({ messageId }: { messageId: string }) => {
+      setMessages(prev => prev.filter(m => m.id !== messageId));
+    };
+
+    // Подписываемся на события
     on('message:new', handleNewMessage);
-    on('message:status', handleStatusUpdate);
+    socket.on('message:status_update', handleStatusUpdate); // Исправлено название
+    socket.on('message:deleted', handleDeleted);
 
     return () => {
       off('message:new', handleNewMessage);
-      off('message:status', handleStatusUpdate);
+      socket.off('message:status_update', handleStatusUpdate);
+      socket.off('message:deleted', handleDeleted);
     };
-  }, [connected, authChecked, activeChat?.id, joinConversation, on, off, handleNewMessage, handleStatusUpdate]);
+  }, [connected, authChecked, activeChat?.id, socket, on, off, handleNewMessage]);
 
   const handleSendMessage = () => {
     if (!newMessage.trim() || !activeChat?.id) return;
@@ -245,6 +263,41 @@ export default function MessengerPage() {
     router.replace('/messenger', undefined);
   };
 
+  const filteredChats = chats.filter(c => c.type === activeTab);
+
+  // В MessengerPage.tsx
+
+  const handleDelete = (messageId: string) => {
+    if (!activeChat) return;
+
+    // Вызываем функцию из контекста (которая делает и API, и Socket)
+    deleteMessage(activeChat.id, messageId);
+
+    // Оптимистичное удаление в стейте
+    setMessages(prev => prev.filter(m => m.id !== messageId));
+  };
+
+  // Прослушивание удаления от других
+  useEffect(() => {
+    if (!socket) return;
+    const onDeleted = ({ messageId }: { messageId: string }) => {
+      setMessages(prev => prev.filter(m => m.id !== messageId));
+    };
+    socket.on('message:deleted', onDeleted);
+    return () => { socket.off('message:deleted', onDeleted); };
+  }, [socket]);
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleEdited = ({ messageId, text }: { messageId: string, text: string }) => {
+      setMessages(prev => prev.map(m => m.id === messageId ? { ...m, text } : m));
+    };
+
+    socket.on('message:edited', handleEdited);
+    return () => { socket.off('message:edited', handleEdited); };
+  }, [socket]);
+
   if (!authChecked || loading) {
     return (
       <div className="min-h-[100dvh] bg-background-dark flex items-center justify-center">
@@ -254,8 +307,6 @@ export default function MessengerPage() {
       </div>
     );
   }
-
-  const filteredChats = chats.filter(c => c.type === activeTab);
 
   return (
     // Заменили h-screen на h-[100dvh] для лучшей совместимости с iOS Safari
@@ -290,21 +341,15 @@ export default function MessengerPage() {
             onLoadMore={loadMoreMessages}
             hasMore={hasMore}
             isLoadingMore={isLoadingMore}
+            onDeleteMessage={handleDelete}
+            markAsRead={markAsRead}
+            onEditMessage={editMessage}
           />
         </div>
 
         {/* Дополнительная боковая панель: полностью скрыта на планшетах и мобилках */}
-        <nav className="hidden xl:flex w-20 lg:w-64 border-l border-white/10 flex-col py-6 px-4 bg-background-dark shrink-0">
-          <div className="flex flex-col gap-2">
-            <Link href="/" className="group flex items-center gap-4 px-4 py-3 rounded-xl transition-all hover:bg-accent-dark text-slate-500 hover:text-white">
-              <span className="material-symbols-outlined group-hover:text-accent-neon">home</span>
-              <span className="hidden lg:block text-sm font-medium">Home</span>
-            </Link>
-            <button className="group flex items-center gap-4 px-4 py-3 rounded-xl bg-accent-neon/10 text-accent-neon border border-accent-neon/20">
-              <span className="material-symbols-outlined">chat_bubble</span>
-              <span className="hidden lg:block text-sm font-semibold">Messenger</span>
-            </button>
-          </div>
+        <nav className="hidden lg:flex m-2 w-66 border-r border-white/10 flex-col bg-background-dark shrink-0 overflow-y-auto">
+          <SidebarNav user={user} />
         </nav>
       </div>
     </div>

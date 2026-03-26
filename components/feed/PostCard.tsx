@@ -1,5 +1,6 @@
 // components/feed/PostCard.tsx
 'use client';
+import Link from "next/link";
 
 // Выносим интерфейс, чтобы его можно было импортировать в другие места
 export interface Post {
@@ -31,23 +32,19 @@ interface PostCardProps {
 }
 
 export default function PostCard({ post, onLike, onBookmark }: PostCardProps) {
+  const profileHref = `/@${post.author.name}`;
   return (
     <article className="glass-card rounded-2xl border border-white/10 overflow-hidden neon-border-hover transition-all group">
       {/* Шапка поста */}
       <div className="p-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div
-            className="size-10 rounded-full bg-cover bg-center border border-white/10"
-            style={{ 
-              backgroundImage: `url("${post.author.avatar || 'https://via.placeholder.com/150'}")` 
-            }}
-          />
+          <img src={post.author.avatar || "/avatar.webp"} alt="user avatar" className="size-10 rounded-full bg-cover bg-center border border-white/10" />
           <div>
             <h4 className="text-sm font-bold text-white group-hover:text-accent-neon transition-colors">
               {post.author.name}
             </h4>
             <p className="text-[11px] text-slate-500 uppercase tracking-widest font-semibold">
-              {post.author.location || 'Global Mesh'} • {post.author.time || new Date(post.createdAt).toLocaleDateString()}
+              {post.author.time || new Date(post.createdAt).toLocaleDateString()}
             </p>
           </div>
         </div>

@@ -9,7 +9,7 @@ interface CreatePostFormProps {
 
 export default function CreatePostForm({ 
   onPostCreated, 
-  currentUserAvatar = "https://lh3.googleusercontent.com/aida-public/AB6AXuDWOcupY-lVeF2m__7xGAxr56tRQ5ybg7P51rG4aHjeAQAsbMv67QF6C8WTkXZFUNxZs7Y5dbGZ7Hhw8BNa_1WIgI9RfJjY6g7qnDf0zsmI4klIlu4Trag-5eYeE1n34u0EWzuzULoXrmHbjvvH99IyXyxkIyW8XB2VHUUmNdV16ZTvH1dZ7MKLVZrerEgW2K47zi_2LK85vZMKdxnOHK0Z_klAi601Y0gMT7fn8m1Z-pHg0zVOFz4gp7GS450pBl-ynhMkeMFjFBCz" 
+  currentUserAvatar = "/avatar.webp" 
 }: CreatePostFormProps) {
   const [postText, setPostText] = useState('');
   const [isPosting, setIsPosting] = useState(false);
@@ -51,9 +51,10 @@ export default function CreatePostForm({
     <div className="glass-card rounded-2xl p-6 border border-white/5 flex flex-col gap-4">
       <div className="flex gap-4">
         <div
-          className="size-12 rounded-full bg-cover bg-center shrink-0 border border-white/10"
+          className=""
           style={{ backgroundImage: `url("${currentUserAvatar}")` }}
         />
+        <img className='size-12 rounded-full bg-cover bg-center shrink-0 border border-white/10' src={currentUserAvatar || "/avatar.webp"} alt="user avatar" />
         <textarea
           className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white placeholder:text-slate-500 focus:ring-1 focus:ring-accent-neon focus:border-accent-neon transition-all resize-none min-h-[80px] outline-none"
           placeholder="Share something new..."

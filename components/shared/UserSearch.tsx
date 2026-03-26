@@ -78,7 +78,7 @@ export default function UserSearch({
           {results.map((user) => (
             <Link
               key={user.id}
-              href={onSelect ? '#' : `/profile/${user.name}`}
+              href={onSelect ? '#' : `/@${user.name}`}
               onClick={(e) => {
                 if (onSelect) {
                   e.preventDefault();
@@ -90,13 +90,13 @@ export default function UserSearch({
               className="flex items-center gap-3 p-3 hover:bg-white/5 transition-colors border-b border-white/5 last:border-0"
             >
               <img 
-                src={user.avatar || 'https://lh3.googleusercontent.com/a/ACg8ocL8vGf-fJ0fUqR_V_6Y-8y_vV_VvV_VvV_VvV_V=s96-c'} 
+                src={user.avatar || '/avatar.webp'} 
                 className="size-10 rounded-full object-cover border border-white/10" 
                 alt={user.name} 
               />
               <div>
                 <p className="text-sm font-bold text-white leading-tight">{user.name}</p>
-                <p className="text-[10px] text-accent-neon uppercase tracking-widest">Active Node</p>
+                <p className="text-[10px] text-accent-neon uppercase tracking-widest">Go to profile</p>
               </div>
             </Link>
           ))}

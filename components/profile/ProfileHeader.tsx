@@ -21,7 +21,7 @@ export default function ProfileHeader({ profile, onFollow, onMessage }: ProfileH
       <div className="relative w-full rounded-2xl overflow-hidden h-64 lg:h-80 bg-surface-dark group">
         <img 
           className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" 
-          src={profile.cover || 'https://lh3.googleusercontent.com/aida-public/AB6AXuAidSs22nPF55acHaQqLhPVUP6POWavetcR-u4pYkqlERs8sEqkSrUZW_GZhnNL92HOGcGxTfiiH7cmWhtGQK1Sqmmzc1hM4bfatPP-RD7ds9AVRtpsf5zJ0h-kdREgKvITI_pGHF84Dvhp5XaqG9WH21XL0GWVlSSQlu8iuddBZwhLq5K69NZotwVN4jir0tw9DFPA0Dmvv6gvFLd5mHEyY25xGlSx3YIabLhBWqqdkEszO6PwtUNGerFrRpOjTeprFgE0_6rQjpzV'}
+          src={profile.cover || "/cover.webp"}
           alt="Cover photo"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background-dark via-transparent to-transparent"></div>
@@ -32,14 +32,13 @@ export default function ProfileHeader({ profile, onFollow, onMessage }: ProfileH
         <div className="size-32 lg:size-40 rounded-full border-4 border-background-dark bg-background-dark overflow-hidden shadow-2xl">
           <img 
             className="h-full w-full object-cover" 
-            src={profile.avatar || 'https://lh3.googleusercontent.com/aida-public/AB6AXuDWOcupY-lVeF2m__7xGAxr56tRQ5ybg7P51rG4aHjeAQAsbMv67QF6C8WTkXZFUNxZs7Y5dbGZ7Hhw8BNa_1WIgI9RfJjY6g7qnDf0zsmI4klIlu4Trag-5eYeE1n34u0EWzuzULoXrmHbjvvH99IyXyxkIyW8XB2VHUUmNdV16ZTvH1dZ7MKLVZrerEgW2K47zi_2LK85vZMKdxnOHK0Z_klAi601Y0gMT7fn8m1Z-pHg0zVOFz4gp7GS450pBl-ynhMkeMFjFBCz'}
+            src={profile.avatar || "/avatar.webp"}
             alt={`${profile.name} avatar`}
           />
         </div>
         
         <div className="mt-4 text-center">
-          <h1 className="text-3xl font-bold text-slate-100">{profile.name}</h1>
-          <p className="text-accent-neon font-medium">@{profile.name}</p>
+          <h1 className="text-4xl font-bold text-slate-100 text-accent-neon">@{profile.name}</h1>
           <p className="mt-3 max-w-md text-slate-400 text-base">{profile.bio || 'Dream. Create. Share.'}</p>
         </div>
 

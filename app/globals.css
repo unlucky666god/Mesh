@@ -162,3 +162,21 @@ body {
 .animate-pulse-glow {
   animation: pulse-glow 3s infinite ease-in-out;
 }
+
+@keyframes slideInUp {
+    from { transform: translateY(10px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.animation-slideInUp {
+    animation: slideInUp 0.2s ease-out forwards;
+}
+
+.animation-fadeIn {
+    animation: fadeIn 0.15s ease-out forwards;
+}

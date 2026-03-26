@@ -60,8 +60,7 @@ export default function FeedPage() {
             )}
           </div>
         </main>
-        
-        {/* Передаем юзера, чтобы имя появилось в сайдбаре */}
+      
         <SidebarNav user={user} />
       </div>
     </div>

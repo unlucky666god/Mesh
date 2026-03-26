@@ -7,7 +7,9 @@ import { usePathname } from "next/navigation";
 interface SidebarNavProps {
   active?: string;
   trending?: Array<{ tag: string; count: string }>;
-  user?: any; // Добавляем поддержку юзера
+  user?: {
+    name?: string;
+  } | null;
 }
 
 export default function SidebarNav({ active, trending, user }: SidebarNavProps) {
@@ -19,7 +21,20 @@ export default function SidebarNav({ active, trending, user }: SidebarNavProps) 
   }, []);
 
   const getLinkStyles = (href: string) => {
-    const isActive = pathname === href;
+    const isProfileLink = href.includes('@');
+    let isActive = false;
+
+    if (isProfileLink) {
+      // Если ссылка содержит @, проверяем, есть ли @ в текущем пути
+      isActive = pathname.includes('@');
+    } else if (href === "/") {
+      // Для главной оставляем строгое сравнение
+      isActive = pathname === "/";
+    } else {
+      // Для мессенджера и других разделов
+      isActive = pathname.startsWith(href);
+    }
+
     return isActive
       ? "group flex items-center gap-3 px-4 py-3 rounded-xl bg-accent-neon text-black font-bold shadow-[0_0_15px_rgba(57,255,20,0.4)] transition-all"
       : "group flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:text-accent-neon hover:bg-white/5 transition-all";
@@ -29,6 +44,8 @@ export default function SidebarNav({ active, trending, user }: SidebarNavProps) 
   if (!mounted) {
     return <aside className="hidden lg:flex w-64 flex-col gap-6 sticky top-28 self-start" />;
   }
+
+  const profileHref = user?.name ? `/@${user.name}` : null;
 
   return (
     <aside className="hidden lg:flex w-64 flex-col gap-6 sticky top-28 self-start">
@@ -43,6 +60,12 @@ export default function SidebarNav({ active, trending, user }: SidebarNavProps) 
             <span className="material-symbols-outlined">forum</span>
             <span className="text-sm font-mono uppercase">Messages</span>
           </Link>
+          {profileHref && (
+            <Link className={getLinkStyles(profileHref)} href={profileHref}>
+              <span className="material-symbols-outlined">account_circle</span>
+              <span className="text-sm font-mono uppercase">Profile</span>
+            </Link>
+          )}
         </div>
       </nav>
     </aside>
