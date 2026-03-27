@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { ChatSidebar } from '@/components/messenger/ChatSidebar';
 import { ChatWindow } from '@/components/messenger/ChatWindow';
 import { useSocket } from '@/context/socketContext';
-import Link from 'next/link';
 import TopNav from "@/components/layout/TopNav";
 import SidebarNav from '../layout/SidebarNav';
 
@@ -19,6 +18,7 @@ interface Chat {
   time: string;
   online: boolean;
   unread?: number;
+  members?: GroupMember[];
 }
 
 interface Message {
@@ -27,6 +27,10 @@ interface Message {
   text: string;
   timestamp: string;
   status?: 'sent' | 'delivered' | 'read';
+  sender?: {
+    name: string;
+    avatar: string;
+  };
 }
 
 export default function MessengerPage() {
@@ -50,7 +54,19 @@ export default function MessengerPage() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const activeChatRef = useRef<Chat | null>(null);
   const { connected, error, joinConversation, sendMessage, markAsRead, on, off, deleteMessage, socket } = useSocket();
-  const [user, setUser] = useState<{ id: string; name: string } | null>(null);
+  const [user, setUser] = useState<{ id: string; name: string } | null>(null); //set current username
+  const [friends, setFriends] = useState([]); // get friends list
+
+  // get friends list function
+  useEffect(() => {
+    const loadFriends = async () => {
+      // API, который возвращает тех, на кого подписан юзер
+      const res = await fetch('/api/users/following');
+      const data = await res.json();
+      setFriends(data);
+    };
+    if (authChecked) loadFriends();
+  }, [authChecked]);
 
   // === ПРОВЕРКА АВТОРИЗАЦИИ ===
   useEffect(() => {
@@ -191,6 +207,7 @@ export default function MessengerPage() {
         text: msg.text || msg.content, // Проверка на оба варианта поля
         timestamp: new Date(msg.timestamp).toString(),
         status: msg.status || 'sent',
+        sender: msg.sender
       };
 
       setMessages(prev => {
@@ -307,6 +324,28 @@ export default function MessengerPage() {
       </div>
     );
   }
+  //Функция загрузки участников группы
+  const fetchMembers = async (chatId: string) => {
+    if (activeChat?.id === chatId && activeChat.members && activeChat.members.length > 0) {
+      return;
+    }
+    try {
+      const res = await fetch(`/api/conversations/${chatId}/members`);
+      const data = await res.json();
+
+      if (data.members) {
+        // Обновляем состояние активного чата, добавляя в него участников
+        setActiveChat(prev => {
+          if (prev?.id === chatId) {
+            return { ...prev, members: data.members };
+          }
+          return prev;
+        });
+      }
+    } catch (err) {
+      console.error("Error fetching members:", err);
+    }
+  };
 
   return (
     // Заменили h-screen на h-[100dvh] для лучшей совместимости с iOS Safari
@@ -344,6 +383,8 @@ export default function MessengerPage() {
             onDeleteMessage={handleDelete}
             markAsRead={markAsRead}
             onEditMessage={editMessage}
+            currentUserId={currentUserId}
+            onFetchMembers={fetchMembers}
           />
         </div>
 

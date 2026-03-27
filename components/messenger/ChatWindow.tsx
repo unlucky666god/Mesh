@@ -2,7 +2,8 @@
 'use client';
 import { useRef, useEffect, useState, Fragment } from 'react';
 import { createPortal } from 'react-dom'; // Добавили портал
-import { formatDateLabel, formatTime24 } from '@/utils/date';
+import { MessageItem } from '@/components/messenger/MessageItem';
+import { GroupInfoDrawer } from './GroupInfoDrawer';
 
 interface Message {
   id: string;
@@ -18,6 +19,8 @@ interface Chat {
   name: string;
   avatar: string;
   online: boolean;
+  type: 'PRIVATE' | 'GROUP';
+  members?: GroupMember[];
 }
 
 interface ChatWindowProps {
@@ -35,6 +38,8 @@ interface ChatWindowProps {
   onDeleteMessage: (id: string) => void;
   onEditMessage: (conversationId: string, messageId: string, newText: string) => void;
   markAsRead: (conversationId: string, messageIds: string[]) => void;
+  currentUserId: string | null;
+  onFetchMembers: (chatId: string) => void;
 }
 
 export function ChatWindow({
@@ -50,15 +55,17 @@ export function ChatWindow({
   isLoadingMore,
   onDeleteMessage,
   markAsRead,
-  onEditMessage
+  onEditMessage,
+  currentUserId,
+  onFetchMembers
 }: ChatWindowProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  
+
   const [shouldScrollToBottom, setShouldScrollToBottom] = useState(true);
   const [contextMenu, setContextMenu] = useState<{ id: string, x: number, y: number } | null>(null);
   const [editingMessage, setEditingMessage] = useState<{ id: string, text: string } | null>(null);
-  
+  const [showGroupInfo, setShowGroupInfo] = useState(false);
   const longPressTimer = useRef<NodeJS.Timeout | null>(null);
   const lastScrollHeightRef = useRef<number>(0);
 
@@ -67,10 +74,10 @@ export function ChatWindow({
     const closeMenu = () => setContextMenu(null);
     window.addEventListener('click', closeMenu);
     if (scrollContainerRef.current) {
-        scrollContainerRef.current.addEventListener('scroll', closeMenu);
+      scrollContainerRef.current.addEventListener('scroll', closeMenu);
     }
     return () => {
-        window.removeEventListener('click', closeMenu);
+      window.removeEventListener('click', closeMenu);
     };
   }, []);
 
@@ -146,10 +153,18 @@ export function ChatWindow({
 
   if (!activeChat) return null;
 
+  useEffect(() => {
+    const needsMembers = !activeChat?.members || activeChat.members.length === 0;
+    if (showGroupInfo && activeChat?.id && activeChat.type === 'GROUP') {
+      // Вызываем пропс или функцию загрузки (её нужно прокинуть из родителя)
+      onFetchMembers(activeChat.id);
+    }
+  }, [showGroupInfo, activeChat?.id, onFetchMembers]);
+
   return (
     <section className="flex-1 flex flex-col bg-background-dark h-full overflow-hidden relative">
       {/* HEADER */}
-      <header className="shrink-0 p-4 border-b border-white/10 flex items-center justify-between bg-background-dark/80 backdrop-blur-md z-20">
+      <header onClick={() => activeChat.type === 'GROUP' && setShowGroupInfo(true)} className="shrink-0 p-4 border-b border-white/10 flex items-center justify-between bg-background-dark/80 backdrop-blur-md z-20 cursor-pointer">
         <div className="flex items-center gap-3">
           {onBack && <button onClick={onBack} className="md:hidden p-2 -ml-2 text-slate-300"><span className="material-symbols-outlined">arrow_back_ios_new</span></button>}
           <div className="relative shrink-0">
@@ -166,40 +181,37 @@ export function ChatWindow({
       {/* MESSAGES */}
       <div ref={scrollContainerRef} onScroll={handleScroll} className="flex-1 overflow-y-auto p-4 space-y-6">
         {messages.map((msg, index) => {
-          const isMe = msg.senderId === 'me';
-          const showDate = index === 0 || new Date(msg.timestamp).toDateString() !== new Date(messages[index - 1].timestamp).toDateString();
+          const isMe = msg.senderId === 'me' || msg.senderId === currentUserId;
+
+          // ЛОГИКА РАЗДЕЛЕНИЯ ДАТ:
+          const currentDate = new Date(msg.timestamp).toDateString();
+          const prevDate = index > 0 ? new Date(messages[index - 1].timestamp).toDateString() : null;
+          const showDateSeparator = currentDate !== prevDate;
 
           return (
-            <Fragment key={msg.id || index}>
-              {showDate && (
-                <div className="flex justify-center my-2 w-full">
-                  <span className="px-3 py-1 rounded-full bg-white/5 text-[10px] font-bold uppercase tracking-widest text-slate-500 border border-white/5">
-                    {formatDateLabel(msg.timestamp)}
+            <Fragment key={msg.id}>
+              {showDateSeparator && (
+                <div className="flex justify-center my-6">
+                  <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] text-slate-500 uppercase tracking-widest font-bold">
+                    {new Date(msg.timestamp).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })}
                   </span>
                 </div>
               )}
-              <div 
-                className={`message-bubble flex w-full ${isMe ? 'justify-end' : 'justify-start'}`}
-                data-msg-id={msg.id} data-is-me={isMe} data-status={msg.status}
+
+              <div
+                onContextMenu={(e) => { e.preventDefault(); handleStart(msg.id, e); }}
+                onTouchStart={(e) => handleStart(msg.id, e)}
+                onTouchEnd={handleEnd}
+                className="message-bubble"
+                data-msg-id={msg.id}
+                data-is-me={isMe}
+                data-status={msg.status}
               >
-                <div 
-                  className={`relative p-3 rounded-2xl border max-w-[80%] shrink-0 ${isMe ? 'bg-accent-neon/10 border-accent-neon/30' : 'bg-surface-dark border-white/5'}`}
-                  onMouseDown={(e) => handleStart(msg.id, e)}
-                  onMouseUp={handleEnd}
-                  onTouchStart={(e) => handleStart(msg.id, e)}
-                  onTouchEnd={handleEnd}
-                  onContextMenu={(e) => { e.preventDefault(); setContextMenu({ id: msg.id, x: e.clientX, y: e.clientY }); }}
-                >
-                  <p className="text-sm whitespace-pre-wrap break-words">{msg.text}</p>
-                  <div className={`flex items-center gap-1 mt-1 opacity-50 ${isMe ? 'justify-end' : 'justify-start'}`}>
-                    <p className="text-[10px]">{msg.isEdited && '(edited) '}{formatTime24(msg.timestamp)}</p>
-                    {isMe && (
-                      <span className={`material-symbols-outlined !text-[16px] ${msg.status === 'read' ? 'text-accent-neon' : 'text-slate-500'}`}>
-                        {msg.status === 'read' ? 'done_all' : msg.status === 'delivered' ? 'done_all' : 'done'}
-                      </span>
-                    )}
-                  </div>
-                </div>
+                <MessageItem
+                  message={msg}
+                  isMe={isMe}
+                  showSenderInfo={true}
+                />
               </div>
             </Fragment>
           );
@@ -210,10 +222,10 @@ export function ChatWindow({
       <div className="shrink-0 p-4 bg-background-dark border-t border-white/10">
         {editingMessage && (
           <div className="flex items-center justify-between bg-surface-dark border border-white/10 rounded-t-xl p-2 mb-[-1px] max-w-4xl mx-auto">
-             <div className="flex items-center gap-2 text-amber-400 text-xs ml-2">
-                <span className="material-symbols-outlined text-sm">edit</span> Editing message...
-             </div>
-             <button onClick={() => { setEditingMessage(null); onNewMessageChange(''); }} className="text-slate-500"><span className="material-symbols-outlined text-sm">close</span></button>
+            <div className="flex items-center gap-2 text-amber-400 text-xs ml-2">
+              <span className="material-symbols-outlined text-sm">edit</span> Editing message...
+            </div>
+            <button onClick={() => { setEditingMessage(null); onNewMessageChange(''); }} className="text-slate-500"><span className="material-symbols-outlined text-sm">close</span></button>
           </div>
         )}
         <div className={`max-w-4xl mx-auto flex items-center gap-2 bg-surface-dark border border-white/10 p-2 ${editingMessage ? 'rounded-b-xl' : 'rounded-xl'}`}>
@@ -233,22 +245,63 @@ export function ChatWindow({
 
       {/* PORTAL MENU - Теперь точно не сломает верстку */}
       {contextMenu && createPortal(
-        <div 
+        <div
           className="fixed z-[9999] bg-surface-light border border-white/10 rounded-lg shadow-2xl p-1 min-w-[140px] animate-in fade-in zoom-in duration-100"
-          style={{ top: contextMenu.y, left: Math.min(contextMenu.x, window.innerWidth - 150) }}
+          style={{
+            top: contextMenu.y,
+            left: Math.min(contextMenu.x, window.innerWidth - 150)
+          }}
           onClick={(e) => e.stopPropagation()}
         >
-          {messages.find(m => m.id === contextMenu.id)?.senderId === 'me' && (
-            <button onClick={() => startEditing(messages.find(m => m.id === contextMenu.id)!)} className="flex items-center gap-2 w-full px-3 py-2 text-xs text-slate-200 hover:bg-white/5 rounded">
-              <span className="material-symbols-outlined text-sm text-amber-400">edit</span> Edit
-            </button>
-          )}
-          <button onClick={() => { onDeleteMessage(contextMenu.id); setContextMenu(null); }} className="flex items-center gap-2 w-full px-3 py-2 text-xs text-red-400 hover:bg-red-500/10 rounded">
-            <span className="material-symbols-outlined text-sm">delete</span> Delete
-          </button>
+          {(() => {
+            const msg = messages.find(m => m.id === contextMenu.id);
+            const isMine = msg?.senderId === 'me' || msg?.senderId === currentUserId;
+
+            // Если сообщение НЕ моё — показываем только инфо
+            if (!isMine) {
+              return (
+                <div className="p-3 text-[10px] text-slate-500 text-center uppercase font-bold">
+                  Message Info
+                  <div className="mt-1 text-slate-400 normal-case font-normal italic">
+                    Sent at {new Date(msg?.timestamp || '').toLocaleTimeString()}
+                  </div>
+                </div>
+              );
+            }
+
+            // Если сообщение МОЁ — показываем кнопки управления
+            return (
+              <Fragment>
+                <button
+                  onClick={() => startEditing(msg!)}
+                  className="flex items-center gap-2 w-full px-3 py-2 text-xs text-slate-200 hover:bg-white/5 rounded transition-colors"
+                >
+                  <span className="material-symbols-outlined text-sm text-amber-400">edit</span>
+                  Edit
+                </button>
+                <button
+                  onClick={() => { onDeleteMessage(contextMenu.id); setContextMenu(null); }}
+                  className="flex items-center gap-2 w-full px-3 py-2 text-xs text-red-400 hover:bg-red-500/10 rounded transition-colors"
+                >
+                  <span className="material-symbols-outlined text-sm">delete</span>
+                  Delete
+                </button>
+              </Fragment>
+            );
+          })()}
         </div>,
         document.body
       )}
+      <GroupInfoDrawer
+        isOpen={showGroupInfo}
+        onClose={() => setShowGroupInfo(false)}
+        members={activeChat.members || []}
+        currentUserId={currentUserId}
+        isAdmin={!!activeChat.members?.some(m => m.id === currentUserId && m.role !== 'MEMBER')}
+        onRemoveMember={(id) => {
+          console.log("Removing member:", id);
+        }}
+      />
     </section>
   );
 }

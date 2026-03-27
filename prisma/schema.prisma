@@ -17,6 +17,7 @@ enum ConversationType {
 }
 
 enum ParticipantRole {
+  OWNER
   ADMIN
   MEMBER
 }
@@ -37,20 +38,21 @@ model User {
   avatar    String?
   bio       String?
   cover     String?
-  status    String    @default("offline") 
+  status    String    @default("offline")
   lastSeen  DateTime?
   createdAt DateTime  @default(now())
 
   // Связи
-  participations Participant[] 
-  messages       Message[]     
+  participations Participant[]
+  messages       Message[]
   posts          Post[]
   likes          Like[]
   comments       Comment[]
-  
+
   // Подписки
-  following      Follow[] @relation("Following")
-  followers      Follow[] @relation("Followers")
+  following Follow[] @relation("Following")
+  followers Follow[] @relation("Followers")
+
   @@map("users")
 }
 
@@ -60,24 +62,24 @@ model Follow {
   followingId String
   createdAt   DateTime @default(now())
 
-  follower    User @relation("Following", fields: [followerId], references: [id])
-  following   User @relation("Followers", fields: [followingId], references: [id])
+  follower  User @relation("Following", fields: [followerId], references: [id])
+  following User @relation("Followers", fields: [followingId], references: [id])
 
   @@id([followerId, followingId])
 }
 
 // === Пост ===
 model Post {
-  id        String    @id @default(cuid())
-  content   String    @db.Text
+  id        String   @id @default(cuid())
+  content   String   @db.Text
   image     String?
   authorId  String
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  author    User      @relation(fields: [authorId], references: [id])
-  likes     Like[]
-  comments  Comment[]
+  author   User      @relation(fields: [authorId], references: [id])
+  likes    Like[]
+  comments Comment[]
 }
 
 // === Лайк ===
@@ -86,8 +88,8 @@ model Like {
   postId    String
   createdAt DateTime @default(now())
 
-  user      User @relation(fields: [userId], references: [id])
-  post      Post @relation(fields: [postId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+  post Post @relation(fields: [postId], references: [id])
 
   @@id([userId, postId])
 }
@@ -100,18 +102,19 @@ model Comment {
   postId    String
   createdAt DateTime @default(now())
 
-  user      User @relation(fields: [userId], references: [id])
-  post      Post @relation(fields: [postId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+  post Post @relation(fields: [postId], references: [id])
 }
 
 // === Чат (Комната) ===
 model Conversation {
-  id        String           @id @default(cuid())
-  type      ConversationType @default(PRIVATE)
-  name      String?          
-  avatar    String?          
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
+  id         String           @id @default(cuid())
+  type       ConversationType @default(PRIVATE)
+  name       String?
+  avatar     String?
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+  inviteCode String?          @unique
 
   participants Participant[]
   messages     Message[]

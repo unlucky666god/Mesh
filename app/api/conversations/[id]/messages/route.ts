@@ -48,14 +48,18 @@ export async function GET(
         const messages = await prisma.message.findMany({
             where: { conversationId },
             take: limit,
-            ...(beforeId && beforeId !== "undefined" ? {
-                skip: 1,
-                cursor: { id: beforeId },
-            } : {}),
+            skip: beforeId ? 1 : 0,
+            cursor: beforeId ? { id: beforeId } : undefined,
+            orderBy: { createdAt: 'desc' },
             include: {
-                sender: { select: { id: true, name: true, avatar: true } }
-            },
-            orderBy: { createdAt: "desc" }
+                sender: { // Подгружаем автора сообщения
+                    select: {
+                        id: true,
+                        name: true,
+                        avatar: true
+                    }
+                }
+            }
         });
 
         const formattedMessages = messages.map((msg) => ({
@@ -63,9 +67,13 @@ export async function GET(
             senderId: msg.senderId === decoded.id ? 'me' : msg.senderId,
             text: msg.content,
             timestamp: msg.createdAt.toISOString().replace('Z', ''),
-            status: msg.status.toLowerCase() as 'sent' | 'delivered' | 'read'
+            status: msg.status.toLowerCase() as 'sent' | 'delivered' | 'read',
+            sender: {
+                name: msg.sender.name,
+                avatar: msg.sender.avatar
+            }
         })).reverse();
-        
+
         return NextResponse.json({ messages: formattedMessages });
     } catch (error) {
         console.error("Fetch messages error:", error);
