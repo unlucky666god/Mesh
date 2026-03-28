@@ -98,6 +98,10 @@ export default function MessengerPage() {
     if (!authChecked) return;
 
     const loadChats = async () => {
+      const handleChatSelect = (chat: Chat) => {
+        if (activeChat?.id === chat.id) return; // Важно! Если чат тот же, ничего не делаем
+        setActiveChat(chat);
+      };
       try {
         const res = await fetch('/api/conversations', { credentials: 'include' });
         if (res.ok) {
@@ -334,12 +338,16 @@ export default function MessengerPage() {
       const data = await res.json();
 
       if (data.members) {
-        // Обновляем состояние активного чата, добавляя в него участников
         setActiveChat(prev => {
-          if (prev?.id === chatId) {
-            return { ...prev, members: data.members };
+          // Если ID не совпадает или участники уже те же самые — не обновляем
+          if (prev?.id !== chatId) return prev;
+
+          // Поверхностное сравнение, чтобы избежать лишнего ререндера
+          if (JSON.stringify(prev.members) === JSON.stringify(data.members)) {
+            return prev;
           }
-          return prev;
+
+          return { ...prev, members: data.members };
         });
       }
     } catch (err) {

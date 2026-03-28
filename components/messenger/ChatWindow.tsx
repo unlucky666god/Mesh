@@ -69,6 +69,13 @@ export function ChatWindow({
   const longPressTimer = useRef<NodeJS.Timeout | null>(null);
   const lastScrollHeightRef = useRef<number>(0);
 
+  const handleHeaderClick = () => {
+    if (activeChat?.type === 'GROUP') {
+      onFetchMembers(activeChat.id); // Загружаем данные только ПРИ КЛИКЕ
+      setShowGroupInfo(true);
+    }
+  };
+
   // Закрытие меню при любом клике или скролле
   useEffect(() => {
     const closeMenu = () => setContextMenu(null);
@@ -153,18 +160,10 @@ export function ChatWindow({
 
   if (!activeChat) return null;
 
-  useEffect(() => {
-    const needsMembers = !activeChat?.members || activeChat.members.length === 0;
-    if (showGroupInfo && activeChat?.id && activeChat.type === 'GROUP') {
-      // Вызываем пропс или функцию загрузки (её нужно прокинуть из родителя)
-      onFetchMembers(activeChat.id);
-    }
-  }, [showGroupInfo, activeChat?.id, onFetchMembers]);
-
   return (
     <section className="flex-1 flex flex-col bg-background-dark h-full overflow-hidden relative">
       {/* HEADER */}
-      <header onClick={() => activeChat.type === 'GROUP' && setShowGroupInfo(true)} className="shrink-0 p-4 border-b border-white/10 flex items-center justify-between bg-background-dark/80 backdrop-blur-md z-20 cursor-pointer">
+      <header onClick={handleHeaderClick} className="shrink-0 p-4 border-b border-white/10 flex items-center justify-between bg-background-dark/80 backdrop-blur-md z-20 cursor-pointer">
         <div className="flex items-center gap-3">
           {onBack && <button onClick={onBack} className="md:hidden p-2 -ml-2 text-slate-300"><span className="material-symbols-outlined">arrow_back_ios_new</span></button>}
           <div className="relative shrink-0">
